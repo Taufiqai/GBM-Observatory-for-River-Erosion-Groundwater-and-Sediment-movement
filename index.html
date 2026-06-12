@@ -761,7 +761,7 @@ function gibsUrl(layer, tms, ext, date){
   return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/${tms}/{z}/{y}/{x}.${ext}`;
 }
 function initMap(){
-  map = L.map("map",{zoomControl:true}).setView([24.45,89.70],11); // Jamuna at Sirajganj
+  map = L.map(P+"map",{zoomControl:true}).setView([24.45,89.70],11); // Jamuna at Sirajganj
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     {attribution:"Esri World Imagery", maxZoom:18}).addTo(map);
   const b = new Date(Date.now() - 5*864e5);
@@ -974,7 +974,7 @@ function graceUrl(month){ // month = "YYYY-MM"
 }
 function monthStr(d){ return d.toISOString().slice(0,7); }
 function initMap(){
-  map = L.map("map",{zoomControl:true}).setView([24.0,90.0],7); // Bangladesh
+  map = L.map(P+"map",{zoomControl:true}).setView([24.0,90.0],7); // Bangladesh
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     {attribution:"Esri World Imagery", maxZoom:18}).addTo(map);
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",
@@ -1237,7 +1237,7 @@ function selDate(year){
 }
 function layerInfo(){ const [l,t,e,y0]=$("layerSel").value.split("|"); return {l,t,e,y0:+y0}; }
 function initMap(){
-  map = L.map("map",{zoomControl:true}).setView([23.6,90.4],8);
+  map = L.map(P+"map",{zoomControl:true}).setView([23.6,90.4],8);
   L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     {attribution:"Esri World Imagery", maxZoom:18}).addTo(map);
   const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -2126,7 +2126,12 @@ function showStation(k){
     t.setAttribute("aria-selected", on?"true":"false");
   });
   const m = STATIONS[k];
-  setTimeout(()=>{ m.init(); m.invalidate(); }, 30);
+  setTimeout(()=>{
+    try{ m.init(); }catch(err){ console.error("Station init failed:", err);
+      const st=document.querySelector("#pane-"+k+" [id$='-status']");
+      if(st){ st.textContent="Station failed to start: "+err.message; st.className="err"; } }
+    m.invalidate();
+  }, 30);
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>showStation(t.id.slice(4))));
 showStation("rb");
