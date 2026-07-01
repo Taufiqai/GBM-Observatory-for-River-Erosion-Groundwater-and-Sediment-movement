@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10211C">
+<title>Install · GBM Observatory</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>window.QRCode||document.write('<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script>')</script>
+<script>window.QRCode||document.write('<script src="https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js"><\/script>')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,700;10..72,800&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#10211C;--paper:#ECF1EE;--panel:#FAFCFB;--accent:#1879A0;--soil:#C8732A;--green:#0E7268;--hairline:#C9D6D4;--soft:#4A6168;
+    --mono:'JetBrains Mono',monospace;--body:'Archivo',sans-serif;--disp:'Big Shoulders',sans-serif;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);color:var(--ink);background:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 40px}
+  header{width:100%;background:var(--ink);color:#E8F0EC;border-bottom:4px solid var(--soil);padding:18px 20px;text-align:center}
+  header h1{font-family:var(--disp);font-weight:800;font-size:1.5rem;letter-spacing:.04em;text-transform:uppercase;line-height:1.05}
+  header .sub{font-family:var(--mono);font-size:.62rem;color:#9FC1C9;letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+  .wrap{width:100%;max-width:560px;padding:0 18px}
+  .card{background:var(--panel);border:1px solid var(--hairline);border-radius:8px;margin-top:18px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .card-h{font-family:var(--disp);font-weight:700;font-size:1.1rem;letter-spacing:.05em;text-transform:uppercase;padding:12px 16px;border-bottom:1px solid var(--hairline)}
+  .card-b{padding:16px}
+  .qrbox{display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 16px}
+  #qr{background:#fff;padding:14px;border-radius:8px;border:1px solid var(--hairline);min-height:180px;display:flex;align-items:center;justify-content:center}
+  #qr img,#qr canvas{display:block}
+  .urlrow{display:flex;gap:6px;width:100%;max-width:420px}
+  .urlrow input{flex:1;font-family:var(--mono);font-size:.72rem;padding:8px 10px;border:1px solid var(--hairline);border-radius:5px;color:var(--ink);background:#fff}
+  button{font-family:var(--mono);font-weight:700;font-size:.78rem;cursor:pointer;border:none;border-radius:6px;padding:10px 14px}
+  .btn-primary{background:var(--soil);color:#fff} .btn-primary:hover{filter:brightness(.92)}
+  .btn-ghost{background:var(--panel);color:var(--ink);border:1px solid var(--hairline)}
+  .big-install{display:block;width:100%;max-width:420px;margin:6px auto 0;background:var(--green);color:#fff;font-size:.95rem;padding:14px}
+  .steps{list-style:none;display:flex;flex-direction:column;gap:14px}
+  .steps li{display:flex;gap:12px;align-items:flex-start;font-size:.9rem;line-height:1.5}
+  .steps .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--mono);font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center}
+  .tabs{display:flex;gap:6px;padding:12px 16px 0;flex-wrap:wrap}
+  .tab{font-family:var(--mono);font-size:.72rem;font-weight:600;padding:7px 12px;border:1px solid var(--hairline);border-bottom:none;border-radius:6px 6px 0 0;background:var(--paper);color:var(--soft);cursor:pointer}
+  .tab.active{background:var(--panel);color:var(--ink);border-color:var(--accent)}
+  .pane{display:none;padding:16px} .pane.active{display:block}
+  .note{font-family:var(--mono);font-size:.66rem;color:var(--soft);line-height:1.5;margin-top:10px}
+  .credit{font-family:var(--mono);font-size:.6rem;color:#9FC1C9;text-align:center;margin-top:22px;line-height:1.5;padding:0 18px}
+  a{color:var(--accent)}
+  .hide{display:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>GBM Observatory</h1>
+  <div class="sub">Install on your device · scan or tap</div>
+</header>
+
+<div class="wrap">
+  <div class="card">
+    <div class="card-h">Scan to open on a phone</div>
+    <div class="qrbox">
+      <div id="qr" aria-label="QR code to open the GBM Observatory"></div>
+      <div class="urlrow">
+        <input type="text" id="urlField" readonly aria-label="App URL">
+        <button class="btn-ghost" id="copyBtn">Copy</button>
+      </div>
+      <button class="btn-primary" id="setUrlBtn">URL not right? Set it</button>
+      <p class="note" id="qrNote">Point a phone camera at the code to open the Observatory. On that phone, follow the install steps below to add it as an app.</p>
+    </div>
+  </div>
+
+  <button class="btn-primary big-install" id="installBtn">⬇ Install app on this device</button>
+  <p class="note hide" id="installedMsg" style="text-align:center">✓ Installed. Look for the GBM Observatory icon on your home screen / app list.</p>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" data-os="android">Android</button>
+      <button class="tab" data-os="ios">iPhone / iPad</button>
+      <button class="tab" data-os="desktop">Computer</button>
+    </div>
+    <div class="pane active" id="pane-android">
+      <ol class="steps">
+        <li><span class="n">1</span><span>Open the link in <b>Chrome</b> (scan the QR code above, or tap the green button).</span></li>
+        <li><span class="n">2</span><span>Tap the <b>⋮</b> menu (top-right).</span></li>
+        <li><span class="n">3</span><span>Tap <b>Install app</b> (or <b>Add to Home screen</b>).</span></li>
+        <li><span class="n">4</span><span>The GBM Observatory icon appears in your app drawer — it opens full-screen like any app.</span></li>
+      </ol>
+    </div>
+    <div class="pane" id="pane-ios">
+      <ol class="steps">
+        <li><span class="n">1</span><span>Open the link in <b>Safari</b> (Apple requires Safari for installation).</span></li>
+        <li><span class="n">2</span><span>Tap the <b>Share</b> button (square with an upward arrow).</span></li>
+        <li><span class="n">3</span><span>Scroll down and tap <b>Add to Home Screen</b>.</span></li>
+        <li><span class="n">4</span><span>Tap <b>Add</b> — the icon appears on your home screen.</span></li>
+      </ol>
+    </div>
+    <div class="pane" id="pane-desktop">
+      <ol class="steps">
+        <li><span class="n">1</span><span>Open the link in <b>Chrome</b> or <b>Edge</b>.</span></li>
+        <li><span class="n">2</span><span>Click the <b>install icon</b> in the address bar (a small monitor with a ⊕), or use the green button above.</span></li>
+        <li><span class="n">3</span><span>Click <b>Install</b> — it opens in its own window and pins to your taskbar/dock.</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-h">Print this page</div>
+    <div class="card-b">
+      <p class="note" style="margin-top:0">Print or screenshot this page to post the QR code in offices, field stations, or training rooms. Anyone can scan it to install the Observatory.</p>
+      <button class="btn-ghost" onclick="window.print()" style="margin-top:10px">🖨 Print</button>
+    </div>
+  </div>
+
+  <p class="credit">GBM Observatory — Monitoring River Erosion, Groundwater, and the Alluvion–Diluvion Cycle in the Ganges–Brahmaputra–Meghna System focusing Bangladesh.<br>Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)</p>
+</div>
+
+<script>
+"use strict";
+// The app lives at the directory root next to this page (index.html).
+function appUrl(){
+  // honor a manual override stored locally
+  var saved = null;
+  try{ saved = sessionStorage.getItem('gbmUrl'); }catch(e){}
+  if(saved) return saved;
+  var u = new URL(window.location.href);
+  // strip the landing filename → point to the folder root (where index.html is)
+  u.pathname = u.pathname.replace(/[^\/]*$/, '');
+  u.search=''; u.hash='';
+  // if opened from a file:// path, fall back to a placeholder the user can edit
+  if(u.protocol === 'file:') return 'https://your-vercel-domain.vercel.app/';
+  return u.toString();
+}
+function renderQR(url){
+  var box = document.getElementById('qr');
+  box.innerHTML='';
+  if(window.QRCode){
+    new QRCode(box, { text:url, width:180, height:180, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    // ultimate fallback: a public QR image service
+    var img=document.createElement('img');
+    img.alt='QR code'; img.width=180; img.height=180;
+    img.src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(url);
+    box.appendChild(img);
+  }
+}
+function refresh(){
+  var url=appUrl();
+  document.getElementById('urlField').value=url;
+  renderQR(url);
+  if(url.indexOf('your-vercel-domain')>-1){
+    document.getElementById('qrNote').textContent='This page was opened from a file, so the URL is a placeholder. Tap “URL not right? Set it” and paste your live Vercel address (e.g. https://gbm-observatory.vercel.app/).';
+  }
+}
+document.getElementById('copyBtn').addEventListener('click',function(){
+  var f=document.getElementById('urlField'); f.select();
+  try{ navigator.clipboard.writeText(f.value); this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy';},1500);}catch(e){}
+});
+document.getElementById('setUrlBtn').addEventListener('click',function(){
+  var v=prompt('Enter the live URL of the GBM Observatory (where index.html is hosted):', document.getElementById('urlField').value);
+  if(v){ try{ sessionStorage.setItem('gbmUrl', v); }catch(e){} refresh(); }
+});
+// tabs: default to detected OS
+var tabs=document.querySelectorAll('.tab');
+function showOS(os){
+  tabs.forEach(function(t){ t.classList.toggle('active', t.dataset.os===os); });
+  document.querySelectorAll('.pane').forEach(function(p){ p.classList.toggle('active', p.id==='pane-'+os); });
+}
+tabs.forEach(function(t){ t.addEventListener('click',function(){ showOS(t.dataset.os); }); });
+(function(){
+  var ua=navigator.userAgent||'';
+  if(/iPhone|iPad|iPod/i.test(ua)) showOS('ios');
+  else if(/Android/i.test(ua)) showOS('android');
+  else showOS('desktop');
+})();
+// install button (works when this page is served from the same origin as the manifest)
+var deferred=null, btn=document.getElementById('installBtn');
+btn.addEventListener('click',function(){
+  if(deferred){ deferred.prompt(); deferred.userChoice.finally(function(){ deferred=null; }); }
+  else { window.location.href = appUrl(); } // no prompt available: just open the app
+});
+window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); deferred=e; });
+window.addEventListener('appinstalled',function(){
+  btn.classList.add('hide'); document.getElementById('installedMsg').classList.remove('hide');
+});
+refresh();
+</script>
+</body>
+</html>

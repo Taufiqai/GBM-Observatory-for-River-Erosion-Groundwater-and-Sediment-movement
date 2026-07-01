@@ -66,3 +66,11 @@ BWDB, WARPO, CEGIS, IWM and BIWTA data is integrated through the **Bridge** tab:
 
 - Data sources: Open-Meteo (GloFAS & ERA5; CC-BY 4.0 attribution appreciated), NASA GIBS/Worldview imagery services, Esri World Imagery basemap. All free for this use; keep the in-app attributions intact.
 - All indices are screening heuristics; consult the handbook for interpretation and limits, and official sources (BWDB/FFWC, CGWB, CEGIS, DLRS) for decisions.
+
+## Companion dashboard: Bangladesh Agro-Pollution Monitor
+
+`agro-pollution.html` is a standalone water-pollution dashboard organized by Bangladesh's 64 districts and 30 agro-ecological zones (BARC). It pairs Sentinel-2/HLS optical proxies (turbidity, algae) with an EPA-DMR-style pollutant loading register that rolls loads up by district/zone and ranks them by toxic weight. Deployed alongside the Observatory, it is reachable at `/agro-pollution.html`. It shares the same data sources and the same honest limits (proxies are not chemical measurements; the register organizes reported data; the Department of Environment and BWDB hold the authoritative figures).
+
+## QR install / landing page
+
+`install.html` is a scan-to-install landing page for field distribution. Deployed alongside the app it lives at `/install.html`; it auto-detects your live URL, renders a QR code on the page (works offline via three fallbacks), shows platform-specific install steps (Android/iOS/desktop, auto-selected), offers a one-tap install button, and has a Print button so you can post the QR code in offices and field stations. Share `your-domain/install.html` — or just print it — and staff install the Observatory by scanning.

@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#22311A">
+<title>Bangladesh Agro-Pollution Monitor — Water Quality by AEZ & District</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>window.L||document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
+<script>window.L||document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>')</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>window.Chart||document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>')</script>
+<script>window.Chart||document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,500;10..72,700;10..72,800&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEF0E7; --panel:#FBFCF7; --ink:#22311A; --ink-soft:#56654A; --crop:#5C7A33; --crop-deep:#3F571F;
+    --water:#1C7A9A; --soil:#9A6A2E; --alert:#B3322C; --ok:#3E7C4F; --hairline:#D2D7C4;
+    --mono:'JetBrains Mono',monospace; --body:'Archivo',sans-serif; --disp:'Big Shoulders',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:var(--body); color:var(--ink); background:var(--paper);
+    background-image:repeating-linear-gradient(90deg, transparent 0 72px, rgba(92,122,51,.05) 72px 73px),
+      repeating-linear-gradient(0deg, transparent 0 72px, rgba(92,122,51,.05) 72px 73px);
+    display:flex; flex-direction:column; min-height:100vh}
+  a{color:var(--water)}
+  header{background:#22311A; color:#EAF0E0; border-bottom:4px solid var(--soil); padding:10px 18px; display:flex; align-items:flex-end; gap:18px; flex-wrap:wrap}
+  .brand h1{font-family:var(--disp); font-weight:800; font-size:1.5rem; letter-spacing:.03em; text-transform:uppercase; line-height:1.05; max-width:680px}
+  .brand .sub{font-family:var(--mono); font-size:.62rem; color:#A9C088; letter-spacing:.1em; text-transform:uppercase; margin-top:3px}
+  .credit{margin-left:auto; max-width:340px; text-align:right; font-family:var(--mono); font-size:.6rem; line-height:1.45; color:#A9C088; letter-spacing:.02em; align-self:flex-start}
+  .controls{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .credit + .controls{margin-left:auto}
+  @media (max-width:760px){ .credit{max-width:100%; text-align:left; margin-left:0} .credit + .controls{margin-left:0} }
+  select,input[type=text],input[type=number],input[type=date],button,input[type=file]{font-family:var(--mono); font-size:.76rem; color:var(--ink); background:var(--panel); border:1px solid var(--hairline); border-radius:3px; padding:6px 8px}
+  header select{background:#33472A; color:#EAF0E0; border-color:#4C6440}
+  button{cursor:pointer; font-weight:600} button:hover{border-color:var(--crop)}
+  .btn-primary{background:var(--soil); color:#fff; border-color:var(--soil)} .btn-primary:hover{filter:brightness(.9)}
+  button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--soil); outline-offset:1px}
+  #status{font-family:var(--mono); font-size:.66rem; color:#A9C088; width:100%}
+  #status.err{color:#F0B3A4}
+  main{flex:1; display:grid; grid-template-columns:minmax(0,1.5fr) minmax(340px,1fr); gap:14px; padding:14px; align-items:start}
+  @media (max-width:980px){ main{grid-template-columns:1fr} }
+  .panel{background:var(--panel); border:1px solid var(--hairline); border-radius:4px; box-shadow:0 1px 0 rgba(34,49,26,.05)}
+  .panel-h{display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--hairline); font-family:var(--disp); font-weight:700; font-size:1rem; letter-spacing:.05em; text-transform:uppercase}
+  .panel-h .tag{font-family:var(--mono); font-size:.58rem; font-weight:400; letter-spacing:.08em; color:var(--ink-soft); margin-left:auto; text-transform:none}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--crop);flex:none}
+  .dot.live{animation:pulse 2.4s infinite} @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @media (prefers-reduced-motion:reduce){.dot.live{animation:none}}
+  #map{height:430px; min-height:340px; border-radius:0 0 4px 4px; cursor:crosshair}
+  .map-tools{display:flex; flex-wrap:wrap; gap:10px; align-items:end; padding:10px 12px; border-bottom:1px solid var(--hairline)}
+  .field{display:flex; flex-direction:column; gap:3px}
+  .field label{font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
+  .swipe{display:flex; flex-direction:column; gap:3px; min-width:140px; flex:1}
+  .swipe input[type=range]{width:100%; accent-color:var(--soil); padding:0}
+  .swipe .ends{display:flex; justify-content:space-between; font-family:var(--mono); font-size:.58rem; color:var(--ink-soft)}
+  .legend{display:flex; align-items:center; gap:8px; padding:6px 12px; border-bottom:1px solid var(--hairline); font-family:var(--mono); font-size:.6rem; color:var(--ink-soft); flex-wrap:wrap}
+  .right-col{display:flex; flex-direction:column; gap:14px}
+  .readout{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--hairline)}
+  .cell{background:var(--panel); padding:11px 13px}
+  .cell .lbl{font-family:var(--mono); font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft)}
+  .cell .val{font-family:var(--mono); font-weight:700; font-size:1.25rem; color:var(--crop-deep); line-height:1.2}
+  .cell .unit{font-size:.7rem; font-weight:400; color:var(--ink-soft)}
+  .cell .delta{font-family:var(--mono); font-size:.64rem}
+  .delta.up{color:var(--alert)} .delta.down{color:var(--ok)} .delta.flat{color:var(--ink-soft)}
+  .sitebar{padding:10px 13px; border-bottom:1px solid var(--hairline); font-size:.8rem}
+  .sitebar b{font-weight:600} .sitebar .mono{font-family:var(--mono); font-size:.66rem; color:var(--ink-soft)}
+  .reg-wrap{max-height:260px; overflow:auto; padding:0 12px}
+  .reg-table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:.66rem}
+  .reg-table th,.reg-table td{padding:5px 7px; border-bottom:1px solid var(--hairline); text-align:right; white-space:nowrap}
+  .reg-table th:first-child,.reg-table td:first-child{text-align:left; white-space:normal}
+  .reg-table th{font-size:.56rem; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); cursor:pointer; position:sticky; top:0; background:var(--panel)}
+  .reg-table tr.over td{background:rgba(179,50,44,.07)} .reg-table td.flag{color:var(--alert); font-weight:700}
+  .ef-form{display:flex; flex-direction:column; gap:8px; padding:12px}
+  .ef-form textarea{font-family:var(--mono); font-size:.68rem; min-height:64px; border:1px solid var(--hairline); border-radius:3px; padding:6px; background:var(--panel); color:var(--ink)}
+  .bd-row{display:flex; gap:8px; flex-wrap:wrap; align-items:end} .bd-row .field{flex:1; min-width:78px}
+  .bd-row input,.bd-row select{width:100%}
+  .chart-wrap{padding:10px 12px 14px; height:210px}
+  .note{padding:0 13px 12px; font-family:var(--mono); font-size:.66rem; color:var(--ink-soft); line-height:1.5}
+  .note b{color:var(--ink)}
+  footer{padding:10px 18px 16px; font-size:.68rem; font-family:var(--mono); color:var(--ink-soft); line-height:1.5; max-width:1100px}
+  .leaflet-container{font-family:var(--body)}
+  .aezbox{padding:8px 13px; border-bottom:1px solid var(--hairline); font-size:.74rem; background:linear-gradient(0deg,rgba(92,122,51,.05),transparent)}
+  .aezbox b{font-weight:600}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Bangladesh Agro-Pollution Monitor</h1>
+    <div class="sub">Surface-water quality by agro-ecological zone &amp; district · free satellite proxies + EPA-DMR loading register</div>
+  </div>
+  <div class="credit">Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)</div>
+  <div class="controls">
+    <select id="viewMode" aria-label="Organize by"><option value="district">By district (64)</option><option value="aez">By agro-ecological zone (30)</option><option value="marine">By maritime zone (Bay of Bengal)</option></select>
+    <select id="divSel" aria-label="Filter by division"><option value="">All divisions</option></select>
+    <select id="unitSel" aria-label="Select district or zone"></select>
+    <button id="loadBtn" class="btn-primary">Load</button>
+  </div>
+  <div id="status">Initialising…</div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="panel-h"><span class="dot" style="background:var(--water)"></span> Water-quality proxy map
+      <span class="tag">Sentinel-2 / HLS 30 m · NASA GIBS · click any marker or the map</span></div>
+    <div class="aezbox" id="aezBox">—</div>
+    <div class="map-tools">
+      <div class="field"><label for="proxy">Proxy layer</label>
+        <select id="proxy">
+          <option value="truecolor">True color (context)</option>
+          <option value="turbidity">Turbidity / sediment</option>
+          <option value="falsecolor">False color (algae/veg = red)</option>
+          <option value="ndti">NDTI turbidity (computed)</option>
+          <option value="ndci">NDCI chlorophyll (computed)</option>
+        </select></div>
+      <div class="field"><label for="dateA">Date A</label><input type="date" id="dateA"></div>
+      <div class="field"><label for="dateB">Date B</label><input type="date" id="dateB"></div>
+      <div class="swipe"><label for="fade">Fade A ⇄ B</label><input type="range" id="fade" min="0" max="100" value="100"><div class="ends"><span>A</span><span>B</span></div></div>
+      <div class="field"><label>&nbsp;</label><button id="applyImg">Update</button></div>
+      <div class="field"><label>&nbsp;</label><button id="dryBtn" title="Least dilution, clearest skies">Dry-season</button></div>
+      <div class="field"><label>&nbsp;</label><button id="computeBtn" class="btn-primary" title="Compute numeric turbidity/chlorophyll from Sentinel-2 bands for the current view">Compute index</button></div>
+    </div>
+    <div class="legend" id="cmpResult" style="display:none"></div>
+    <div class="legend"><span>Markers sized by register load · colour by toxic-weighted load. NDTI/NDCI are computed band indices; proxies are not chemical measurements.</span></div>
+    <div id="map" role="application" aria-label="Bangladesh water-quality map"></div>
+  </section>
+
+  <div class="right-col">
+    <section class="panel">
+      <div class="panel-h"><span class="dot live"></span> Selection readout <span class="tag" id="updatedTag">—</span></div>
+      <div class="sitebar" id="siteInfo">No selection.</div>
+      <div class="readout">
+        <div class="cell"><div class="lbl">Nearest river flow</div><div class="val" id="qVal">—<span class="unit"> m³/s</span></div><div class="delta flat" id="qTag">dilution</div></div>
+        <div class="cell"><div class="lbl">Season</div><div class="val" id="seasonVal" style="font-size:1rem">—</div><div class="delta flat" id="seasonTag">context</div></div>
+        <div class="cell"><div class="lbl">Facilities here</div><div class="val" id="facVal">0</div></div>
+        <div class="cell"><div class="lbl">Total load here</div><div class="val" id="loadVal">0<span class="unit"> kg/yr</span></div></div>
+        <div class="cell"><div class="lbl">Turbidity (NDTI, view mean)</div><div class="val" id="ndtiVal">—</div><div class="delta flat" id="ndtiTag">press Compute index</div></div>
+        <div class="cell"><div class="lbl">Chlorophyll (NDCI, view mean)</div><div class="val" id="ndciVal">—</div><div class="delta flat" id="ndciTag">eutrophication proxy</div></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h">Index time-series at point <span class="tag">monthly NDTI/NDCI · click ‘Build series’</span></div>
+      <div class="map-tools" style="border-top:none">
+        <div class="field"><label for="tsIndex">Index</label><select id="tsIndex"><option value="ndti">NDTI turbidity</option><option value="ndci">NDCI chlorophyll</option></select></div>
+        <div class="field"><label for="tsMonths">Months back</label><select id="tsMonths"><option>12</option><option selected>24</option><option>36</option></select></div>
+        <div class="field"><label>&nbsp;</label><button id="tsBtn" class="btn-primary">Build series</button></div>
+        <div class="field" style="flex:1"><label>&nbsp;</label><span class="mono" id="tsHint" style="font-size:.62rem;color:var(--ink-soft)">Uses the selected marker / map-clicked point.</span></div>
+      </div>
+      <div class="chart-wrap"><canvas id="tsChart" aria-label="Water-quality index time series" role="img"></canvas></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h">Field samples <span class="tag">your in-situ / test-kit readings</span></div>
+      <div class="ef-form">
+        <div class="bd-row">
+          <div class="field" style="flex:2"><label>Site / source</label><input type="text" id="fsName" placeholder="e.g. ghat, well, outfall"></div>
+          <div class="field"><label>Parameter</label><select id="fsPar">
+            <option>pH</option><option>Dissolved oxygen (mg/L)</option><option>EC (µS/cm)</option><option>Turbidity (NTU)</option>
+            <option>Arsenic (µg/L)</option><option>Nitrate (mg/L)</option><option>Salinity (ppt)</option><option>Temperature (°C)</option><option>Secchi depth (cm)</option><option>Other</option>
+          </select></div>
+        </div>
+        <div class="bd-row">
+          <div class="field"><label>Value</label><input type="number" id="fsVal" step="any"></div>
+          <div class="field"><label>Date</label><input type="date" id="fsDate"></div>
+          <div class="field" style="flex:1"><label>Lat,Lon (blank = pin)</label><input type="text" id="fsLL" placeholder="auto from selection"></div>
+          <div class="field"><label>&nbsp;</label><button id="fsAdd" class="btn-primary">Log</button></div>
+        </div>
+        <div class="bd-row">
+          <div class="field"><label>&nbsp;</label><button id="fsExport">Export samples CSV</button></div>
+          <div class="field"><label>&nbsp;</label><button id="fsClear">Clear samples</button></div>
+        </div>
+      </div>
+      <div class="reg-wrap" style="max-height:150px"><table class="reg-table" id="fsTable"><tbody><tr><td>No field samples logged yet.</td></tr></tbody></table></div>
+      <div class="note">Field samples are plotted as markers on the map and stored in this browser only. They capture what satellites cannot — pH, dissolved oxygen, arsenic, salinity — and are the ground-truth companion to the computed indices.</div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h">Top loads by zone / district <span class="tag">toxic-weighted ranking</span></div>
+      <div class="chart-wrap"><canvas id="rankChart" aria-label="Ranking of areas by pollutant load" role="img"></canvas></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-h">Discharge loading register <span class="tag">EPA DMR method</span></div>
+      <div class="ef-form">
+        <div class="bd-row">
+          <div class="field" style="flex:2"><label>Facility / outfall</label><input type="text" id="fName" placeholder="e.g. textile dyeing unit"></div>
+          <div class="field"><label>Pollutant</label><select id="pName">
+            <option>BOD</option><option>COD</option><option>Chromium (total)</option><option>Ammonia-N</option>
+            <option>Total suspended solids</option><option>Lead</option><option>Cadmium</option><option>Sulfide</option>
+            <option>Phenol</option><option>Oil &amp; grease</option><option>Pesticide (total)</option><option>Nitrate-N</option><option>Phosphate</option><option>Other</option>
+          </select></div>
+        </div>
+        <div class="bd-row">
+          <div class="field"><label>Conc mg/L</label><input type="number" id="conc" step="any"></div>
+          <div class="field"><label>Flow m³/day</label><input type="number" id="flow" step="any"></div>
+          <div class="field"><label>Days/yr</label><input type="number" id="days" value="313"></div>
+          <div class="field"><label>Limit mg/L</label><input type="number" id="limit" step="any"></div>
+          <div class="field"><label>&nbsp;</label><button id="addBtn" class="btn-primary">Add</button></div>
+        </div>
+        <textarea id="paste" placeholder="bulk rows: district_or_AEZ,facility,pollutant,conc_mgL,flow_m3day,days,limit_mgL"></textarea>
+        <div class="bd-row">
+          <div class="field"><label>CSV</label><input type="file" id="csv" accept=".csv,.txt"></div>
+          <div class="field"><label>&nbsp;</label><button id="bulkBtn">Load rows</button></div>
+          <div class="field"><label>&nbsp;</label><button id="demoBtn">Example data</button></div>
+          <div class="field"><label>&nbsp;</label><button id="clearReg">Clear</button></div>
+          <div class="field"><label>&nbsp;</label><button id="exportBtn">Export CSV</button></div>
+        </div>
+      </div>
+      <div class="reg-wrap"><table class="reg-table" id="regTable"><tbody><tr><td>No entries — add a facility, paste rows, or load the example data.</td></tr></tbody></table></div>
+      <div class="note" id="regNote">Load (kg/yr) = concentration (mg/L) × flow (m³/day) × days ÷ 1000 (US EPA DMR method). Each facility is tagged to the loaded district/AEZ so totals roll up by area. ▲ flags loads over the entered permit limit. Click a header to sort.</div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  DATA · Imagery: Sentinel-2 / Harmonized Landsat–Sentinel (30 m) and true/false-colour composites from NASA GIBS — physical proxies for turbidity, suspended sediment and algal/eutrophication blooms; satellites cannot measure chromium, BOD, ammonia or other chemicals, and clear-looking water can still be polluted. River flow (dilution context): GloFAS via the free Open-Meteo Flood API. Geography: 64 districts and the 30 BARC agro-ecological zones embedded in this file (district-centroid coordinates; many districts span several AEZs). Loading register: US EPA Water Pollutant Loading Tool / DMR method (load = concentration × flow × time), with relative toxic-weighting for ranking. It organizes and ranks reported/sampled effluent data — it does not measure or invent concentrations. In Bangladesh the authoritative effluent and ambient water-quality data and standards rest with the Department of Environment (ECR) and BWDB; this is a screening and prioritization tool, not a compliance determination. No API keys; runs entirely in the browser.
+</footer>
+
+<script>// Bangladesh districts (64) with approx. district-town coordinates, division, and primary agro-ecological zone (AEZ) number.
+// AEZ assignment is the dominant zone for the district centroid (BARC 30-AEZ classification); many districts span several AEZs.
+window.BD_DISTRICTS = [
+{d:"Bagerhat",div:"Khulna",lat:22.6516,lon:89.7859,aez:13},
+{d:"Bandarban",div:"Chattogram",lat:22.1953,lon:92.2184,aez:29},
+{d:"Barguna",div:"Barishal",lat:22.0953,lon:90.1121,aez:13},
+{d:"Barishal",div:"Barishal",lat:22.7010,lon:90.3535,aez:13},
+{d:"Bhola",div:"Barishal",lat:22.6859,lon:90.6482,aez:18},
+{d:"Bogura",div:"Rajshahi",lat:24.8465,lon:89.3773,aez:4},
+{d:"Brahmanbaria",div:"Chattogram",lat:23.9571,lon:91.1119,aez:19},
+{d:"Chandpur",div:"Chattogram",lat:23.2333,lon:90.6712,aez:18},
+{d:"Chapai Nawabganj",div:"Rajshahi",lat:24.5965,lon:88.2775,aez:11},
+{d:"Chattogram",div:"Chattogram",lat:22.3569,lon:91.7832,aez:23},
+{d:"Chuadanga",div:"Khulna",lat:23.6402,lon:88.8418,aez:11},
+{d:"Cox's Bazar",div:"Chattogram",lat:21.4272,lon:92.0058,aez:23},
+{d:"Cumilla",div:"Chattogram",lat:23.4607,lon:91.1809,aez:19},
+{d:"Dhaka",div:"Dhaka",lat:23.8103,lon:90.4125,aez:8},
+{d:"Dinajpur",div:"Rangpur",lat:25.6217,lon:88.6354,aez:3},
+{d:"Faridpur",div:"Dhaka",lat:23.6070,lon:89.8429,aez:12},
+{d:"Feni",div:"Chattogram",lat:23.0159,lon:91.3976,aez:19},
+{d:"Gaibandha",div:"Rangpur",lat:25.3288,lon:89.5285,aez:3},
+{d:"Gazipur",div:"Dhaka",lat:23.9999,lon:90.4203,aez:28},
+{d:"Gopalganj",div:"Dhaka",lat:23.0050,lon:89.8266,aez:14},
+{d:"Habiganj",div:"Sylhet",lat:24.3745,lon:91.4155,aez:20},
+{d:"Jamalpur",div:"Mymensingh",lat:24.9375,lon:89.9372,aez:9},
+{d:"Jashore",div:"Khulna",lat:23.1664,lon:89.2081,aez:11},
+{d:"Jhalokati",div:"Barishal",lat:22.6406,lon:90.1987,aez:13},
+{d:"Jhenaidah",div:"Khulna",lat:23.5450,lon:89.1539,aez:11},
+{d:"Joypurhat",div:"Rajshahi",lat:25.0968,lon:89.0227,aez:3},
+{d:"Khagrachhari",div:"Chattogram",lat:23.1193,lon:91.9847,aez:29},
+{d:"Khulna",div:"Khulna",lat:22.8456,lon:89.5403,aez:13},
+{d:"Kishoreganj",div:"Dhaka",lat:24.4449,lon:90.7766,aez:21},
+{d:"Kurigram",div:"Rangpur",lat:25.8054,lon:89.6362,aez:2},
+{d:"Kushtia",div:"Khulna",lat:23.9013,lon:89.1206,aez:11},
+{d:"Lakshmipur",div:"Chattogram",lat:22.9447,lon:90.8282,aez:18},
+{d:"Lalmonirhat",div:"Rangpur",lat:25.9923,lon:89.2847,aez:2},
+{d:"Madaripur",div:"Dhaka",lat:23.1641,lon:90.1897,aez:12},
+{d:"Magura",div:"Khulna",lat:23.4855,lon:89.4198,aez:11},
+{d:"Manikganj",div:"Dhaka",lat:23.8644,lon:90.0047,aez:8},
+{d:"Meherpur",div:"Khulna",lat:23.7622,lon:88.6318,aez:11},
+{d:"Moulvibazar",div:"Sylhet",lat:24.4829,lon:91.7774,aez:20},
+{d:"Munshiganj",div:"Dhaka",lat:23.5422,lon:90.5305,aez:16},
+{d:"Mymensingh",div:"Mymensingh",lat:24.7471,lon:90.4203,aez:9},
+{d:"Naogaon",div:"Rajshahi",lat:24.7936,lon:88.9318,aez:26},
+{d:"Narail",div:"Khulna",lat:23.1729,lon:89.5125,aez:12},
+{d:"Narayanganj",div:"Dhaka",lat:23.6238,lon:90.5000,aez:16},
+{d:"Narsingdi",div:"Dhaka",lat:23.9322,lon:90.7151,aez:8},
+{d:"Natore",div:"Rajshahi",lat:24.4206,lon:89.0001,aez:5},
+{d:"Netrokona",div:"Mymensingh",lat:24.8709,lon:90.7279,aez:21},
+{d:"Nilphamari",div:"Rangpur",lat:25.9311,lon:88.8560,aez:1},
+{d:"Noakhali",div:"Chattogram",lat:22.8696,lon:91.0995,aez:18},
+{d:"Pabna",div:"Rajshahi",lat:24.0064,lon:89.2372,aez:5},
+{d:"Panchagarh",div:"Rangpur",lat:26.3411,lon:88.5542,aez:1},
+{d:"Patuakhali",div:"Barishal",lat:22.3596,lon:90.3298,aez:13},
+{d:"Pirojpur",div:"Barishal",lat:22.5841,lon:89.9720,aez:13},
+{d:"Rajbari",div:"Dhaka",lat:23.7574,lon:89.6444,aez:12},
+{d:"Rajshahi",div:"Rajshahi",lat:24.3745,lon:88.6042,aez:26},
+{d:"Rangamati",div:"Chattogram",lat:22.7324,lon:92.2985,aez:29},
+{d:"Rangpur",div:"Rangpur",lat:25.7439,lon:89.2752,aez:3},
+{d:"Satkhira",div:"Khulna",lat:22.7185,lon:89.0705,aez:13},
+{d:"Shariatpur",div:"Dhaka",lat:23.2423,lon:90.4348,aez:16},
+{d:"Sherpur",div:"Mymensingh",lat:25.0205,lon:90.0153,aez:9},
+{d:"Sirajganj",div:"Rajshahi",lat:24.4534,lon:89.7007,aez:7},
+{d:"Sunamganj",div:"Sylhet",lat:25.0658,lon:91.3950,aez:21},
+{d:"Sylhet",div:"Sylhet",lat:24.8949,lon:91.8687,aez:20},
+{d:"Tangail",div:"Dhaka",lat:24.2513,lon:89.9167,aez:8},
+{d:"Thakurgaon",div:"Rangpur",lat:26.0337,lon:88.4616,aez:1}
+];
+
+// 30 Agro-Ecological Zones (BARC). name + short agro/soil-water character used in the dashboard.
+window.BD_AEZ = {
+1:{name:"Old Himalayan Piedmont Plain",note:"Permeable sandy loams, acidic; northern Tista fan."},
+2:{name:"Active Tista Floodplain",note:"Shifting Tista channels & chars; sandy, flood-prone."},
+3:{name:"Tista Meander Floodplain",note:"Largest NW zone; intensive rice; fertile loams."},
+4:{name:"Karatoya–Bangali Floodplain",note:"Mixed loams; rice–jute; Bogura–Sirajganj belt."},
+5:{name:"Lower Atrai Basin",note:"Deeply flooded clay basin; boro rice."},
+6:{name:"Lower Punarbhaba Floodplain",note:"Small NW clay floodplain."},
+7:{name:"Active Brahmaputra–Jamuna Floodplain",note:"Braided chars; sandy, highly mobile; erosion-prone."},
+8:{name:"Young Brahmaputra & Jamuna Floodplain",note:"Silty fertile; dense agriculture; central Bangladesh."},
+9:{name:"Old Brahmaputra Floodplain",note:"Silt loams; Mymensingh–Jamalpur; rice."},
+10:{name:"Active Ganges Floodplain",note:"Calcareous, shifting Ganges chars."},
+11:{name:"High Ganges River Floodplain",note:"Calcareous, drier west; wheat, sugarcane, rice; arsenic-prone."},
+12:{name:"Low Ganges River Floodplain",note:"Lower, wetter Ganges plain; rice–jute."},
+13:{name:"Ganges Tidal Floodplain",note:"Coastal SW; tidal, salinity-affected; shrimp & rice."},
+14:{name:"Gopalganj–Khulna Bils",note:"Peat & deeply flooded basins; boro rice."},
+15:{name:"Arial Bil",note:"Deep depression near Dhaka; single deepwater rice."},
+16:{name:"Middle Meghna River Floodplain",note:"Silty; Munshiganj–Narayanganj; intensive cropping."},
+17:{name:"Lower Meghna River Floodplain",note:"Active estuarine deposition; new chars."},
+18:{name:"Young Meghna Estuarine Floodplain",note:"Coastal accretion; Bhola–Noakhali; salinity."},
+19:{name:"Old Meghna Estuarine Floodplain",note:"Silty clays; Cumilla–Brahmanbaria; rice."},
+20:{name:"Eastern Surma–Kushiyara Floodplain",note:"NE; tea uplands & haor margins; Sylhet."},
+21:{name:"Sylhet Basin (Haor)",note:"Deeply flooded haors; single boro rice; fisheries."},
+22:{name:"Northern & Eastern Piedmont Plains",note:"Foothill fans; flash-flood prone."},
+23:{name:"Chittagong Coastal Plain",note:"SE coast; rice, salt, shrimp; hill runoff."},
+24:{name:"St. Martin's Coral Island",note:"Small coral island; sandy."},
+25:{name:"Level Barind Tract",note:"Drought-prone terrace; clay; supplementary irrigation."},
+26:{name:"High Barind Tract",note:"Dissected terrace; deep water tables; depletion-prone."},
+27:{name:"North-Eastern Barind Tract",note:"Terrace edge; mixed."},
+28:{name:"Madhupur Tract",note:"Red-clay terrace; Dhaka–Gazipur; deep aquifer cone."},
+29:{name:"Northern & Eastern Hills",note:"Hill forests & jhum; CHT; steep, erosion-prone."},
+30:{name:"Akhaura Terrace",note:"Small eastern terrace."}
+};
+</script>
+<script>// Bangladesh sovereign maritime monitoring points (Bay of Bengal).
+// Total sovereign maritime area ~118,813 sq km: territorial sea (12 NM), contiguous zone (24 NM),
+// Exclusive Economic Zone (200 NM), plus continental shelf to ~354 NM from Chittagong (ITLOS 2012, PCA 2014).
+// These are representative monitoring stations (river-mouth plumes, coastal, mid-shelf, deep EEZ), not legal boundaries.
+window.BD_MARINE = [
+{d:"Meghna Estuary mouth",zone:"River plume",lat:22.10,lon:91.00,note:"Combined GBM sediment & pollutant outflow — the delta's main discharge to the sea."},
+{d:"Sundarbans coast (Hiron Point)",zone:"Territorial sea",lat:21.78,lon:89.47,note:"Mangrove coast; salinity & shipping-channel runoff (Mongla port approach)."},
+{d:"Karnaphuli river mouth",zone:"Territorial sea",lat:22.24,lon:91.72,note:"Chattogram port & industrial outfall; tannery/ship-breaking influence."},
+{d:"Ship-breaking belt (Sitakunda)",zone:"Territorial sea",lat:22.55,lon:91.68,note:"Sitakunda–Bhatiary yards; oil, heavy-metal & asbestos discharge hotspot."},
+{d:"Cox's Bazar nearshore",zone:"Territorial sea",lat:21.43,lon:91.95,note:"Tourism & fishing coast; nearshore turbidity."},
+{d:"St. Martin's Island",zone:"Territorial sea",lat:20.63,lon:92.32,note:"Only coral island; 12 NM territorial sea; sensitive reef ecosystem."},
+{d:"Swatch of No Ground (head)",zone:"EEZ / shelf canyon",lat:21.30,lon:89.50,note:"Submarine canyon; primary sediment sink of the GBM system."},
+{d:"South Patches fishing ground",zone:"EEZ",lat:20.80,lon:91.50,note:"Major demersal fishery; eutrophication & trawl pressure."},
+{d:"Middle Bay EEZ",zone:"EEZ",lat:20.00,lon:90.50,note:"Open-shelf reference; chlorophyll & SST monitoring."},
+{d:"Outer EEZ (south)",zone:"EEZ / outer shelf",lat:19.00,lon:90.00,note:"Approaching 200 NM limit; blue-economy survey block."},
+{d:"Deep EEZ / continental shelf",zone:"Continental shelf",lat:18.20,lon:90.00,note:"Toward 354 NM continental-shelf entitlement; oil/gas blocks."},
+{d:"Eastern EEZ (Myanmar boundary)",zone:"EEZ",lat:19.50,lon:92.00,note:"ITLOS 2012 boundary vicinity; transboundary monitoring."},
+{d:"Western EEZ (India boundary)",zone:"EEZ",lat:20.20,lon:89.00,note:"PCA 2014 boundary vicinity; grey-zone monitoring."}
+];
+</script>
+<script>
+"use strict";
+(function(){var miss=[];if(!window.L)miss.push("Leaflet (maps)");if(!window.Chart)miss.push("Chart.js (charts)");
+if(miss.length){var b=document.createElement("div");b.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:#B3322C;color:#fff;font:600 13px/1.5 Arial;padding:10px 16px;text-align:center";
+b.textContent="Could not load required libraries: "+miss.join(", ")+". Three CDNs were tried — this network may block them. Try a hard refresh (Ctrl+F5) or another network.";
+document.addEventListener("DOMContentLoaded",function(){document.body.prepend(b);});}})();
+
+const $=id=>document.getElementById(id);
+const setStatus=(m,e=false)=>{const s=$("status");s.textContent=m;s.className=e?"err":"";};
+const fmt=(n,d=0)=>(n==null||isNaN(n))?"—":n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+const D=window.BD_DISTRICTS, Z=window.BD_AEZ, MAR=window.BD_MARINE||[];
+let map,layA,layB,marker,rankChart,refreshTimer=null;
+let reg=[];           // {area,fac,pol,conc,flow,days,limit}
+let sortKey="load",sortDir=-1;
+let current=null;     // {kind, key, lat, lon, label}
+let tsChart=null, idxOverlay=null, fieldSamples=[], fieldMarkers=[];
+const markers=[];
+
+const TWF={"BOD":0.02,"COD":0.02,"Total suspended solids":0.01,"Ammonia-N":0.5,"Nitrate-N":0.3,"Phosphate":0.4,
+  "Sulfide":1,"Phenol":2,"Oil & grease":0.1,"Pesticide (total)":15,"Chromium (total)":5,"Lead":12,"Cadmium":25,"Other":1};
+
+// AEZ centroid = mean of its districts
+const aezCentroid={};
+Object.keys(Z).forEach(k=>{
+  const ds=D.filter(x=>String(x.aez)===String(k));
+  if(ds.length) aezCentroid[k]={lat:ds.reduce((a,b)=>a+b.lat,0)/ds.length, lon:ds.reduce((a,b)=>a+b.lon,0)/ds.length, n:ds.length};
+});
+
+/* ---------- populate selectors ---------- */
+function fillSelectors(){
+  const divs=[...new Set(D.map(x=>x.div))].sort();
+  divs.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;$("divSel").appendChild(o);});
+  refreshUnitList();
+}
+function refreshUnitList(){
+  const mode=$("viewMode").value, div=$("divSel").value, sel=$("unitSel"); sel.innerHTML="";
+  if(mode==="marine"){
+    MAR.forEach((x,i)=>{const o=document.createElement("option");o.value="m:"+i;o.textContent=`${x.d} (${x.zone})`;sel.appendChild(o);});
+  }else if(mode==="district"){
+    D.filter(x=>!div||x.div===div).sort((a,b)=>a.d.localeCompare(b.d)).forEach(x=>{
+      const o=document.createElement("option");o.value="d:"+x.d;o.textContent=`${x.d} — AEZ ${x.aez}`;sel.appendChild(o);});
+  }else{
+    const zkeys=Object.keys(Z).map(Number).sort((a,b)=>a-b);
+    zkeys.forEach(k=>{
+      if(div){ const has=D.some(x=>x.div===div&&String(x.aez)===String(k)); if(!has)return; }
+      const o=document.createElement("option");o.value="z:"+k;o.textContent=`AEZ ${k} — ${Z[k].name}`;sel.appendChild(o);});
+  }
+}
+$("viewMode").addEventListener("change",refreshUnitList);
+$("divSel").addEventListener("change",refreshUnitList);
+
+/* ---------- map ---------- */
+const GIBS={truecolor:["HLS_S30_Nadir_BRDF_Adjusted_Reflectance","GoogleMapsCompatible_Level12","png"],
+  turbidity:["HLS_S30_Nadir_BRDF_Adjusted_Reflectance","GoogleMapsCompatible_Level12","png"],
+  falsecolor:["HLS_S30_Nadir_BRDF_Adjusted_Reflectance_Vegetation","GoogleMapsCompatible_Level12","png"]};
+const gurl=(l,t,e,dt)=>`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${l}/default/${dt}/${t}/{z}/{y}/{x}.${e}`;
+const isoDay=d=>d.toISOString().slice(0,10);
+function initMap(){
+  map=L.map("map",{zoomControl:true}).setView([23.7,90.4],7);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{attribution:"Esri World Imagery",maxZoom:18}).addTo(map);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,opacity:.85}).addTo(map);
+  const b=new Date(Date.now()-5*864e5),a=new Date(b.getTime()-120*864e5);
+  $("dateB").value=isoDay(b);$("dateA").value=isoDay(a);$("dateA").max=isoDay(new Date());$("dateB").max=isoDay(new Date());
+  applyImg(); drawMarkers();
+  map.on("click",e=>probe(e.latlng.lat,e.latlng.lng));
+}
+function applyImg(){
+  const [l,t,e]=GIBS[$("proxy").value];const dA=$("dateA").value,dB=$("dateB").value;
+  if(layA)map.removeLayer(layA);if(layB)map.removeLayer(layB);
+  const o={maxNativeZoom:12,maxZoom:18,attribution:"NASA GIBS"};
+  layA=L.tileLayer(gurl(l,t,e,dA),o).addTo(map);
+  layB=L.tileLayer(gurl(l,t,e,dB),{...o,opacity:$("fade").value/100}).addTo(map);
+  const tip=$("proxy").value==="turbidity"?"Tan/brown water = turbidity & suspended sediment; sharp fronts mark inflows/discharges."
+    :$("proxy").value==="falsecolor"?"Bright red = vegetation & algae; red on open water = eutrophication bloom.":"True colour context. Blank = cloud/no pass; nudge the date.";
+  setStatus(`Proxy A=${dA} vs B=${dB}. ${tip}`);
+}
+$("applyImg").addEventListener("click",applyImg);
+$("proxy").addEventListener("change",applyImg);
+$("fade").addEventListener("input",e=>{if(layB)layB.setOpacity(e.target.value/100);});
+$("dryBtn").addEventListener("click",()=>{const n=new Date();const y=n.getMonth()>=2?n.getFullYear():n.getFullYear()-1;$("dateA").value=`${y-1}-03-15`;$("dateB").value=`${y}-03-15`;applyImg();setStatus("Dry-season view (mid-March): least dilution, clearest skies — discharge plumes most visible.");});
+
+function areaLoad(kind,key){ // total kg/yr tagged to a district/aez
+  return reg.filter(r=>r.area===(kind==="d"?"d:":"z:")+key).reduce((s,r)=>s+loadKg(r),0);
+}
+function areaTox(kind,key){ return reg.filter(r=>r.area===(kind==="d"?"d:":"z:")+key).reduce((s,r)=>s+twpe(r),0); }
+function drawMarkers(){
+  markers.forEach(m=>map.removeLayer(m));markers.length=0;
+  const mode=$("viewMode").value, div=$("divSel").value;
+  let items;
+  if(mode==="marine") items=MAR.map((x,i)=>({kind:"m",key:String(i),lat:x.lat,lon:x.lon,label:x.d,zone:x.zone}));
+  else if(mode==="district") items=D.filter(x=>!div||x.div===div).map(x=>({kind:"d",key:x.d,lat:x.lat,lon:x.lon,label:x.d,aez:x.aez}));
+  else items=Object.keys(aezCentroid).filter(k=>!div||D.some(x=>x.div===div&&String(x.aez)===k)).map(k=>({kind:"z",key:k,lat:aezCentroid[k].lat,lon:aezCentroid[k].lon,label:"AEZ "+k}));
+  const maxTox=Math.max(1,...items.map(it=>areaTox(it.kind,it.key)));
+  items.forEach(it=>{
+    const tox=areaTox(it.kind,it.key), load=areaLoad(it.kind,it.key);
+    const frac=tox/maxTox;
+    const color=load? (frac>0.66?"#B3322C":frac>0.33?"#C77B1E":"#5C7A33") : "#7C8A9A";
+    const r=load? 7+Math.sqrt(load)/40 : 5;
+    const m=L.circleMarker([it.lat,it.lon],{radius:Math.min(r,22),color,weight:2,fillColor:color,fillOpacity:load?.5:.25})
+      .addTo(map).bindPopup(`<b>${it.label}</b>${it.aez?` · AEZ ${it.aez}`:""}<br>load ${fmt(load,0)} kg/yr · tox-wt ${fmt(tox,0)}<br><a href="#" onclick="window.__sel('${it.kind}','${it.key}');return false;">Load this area</a>`);
+    markers.push(m);
+  });
+}
+window.__sel=(kind,key)=>selectArea(kind,key,true);
+
+/* ---------- selection ---------- */
+async function selectArea(kind,key,pan){
+  let lat,lon,label,aez=null;
+  if(kind==="m"){const x=MAR[+key];lat=x.lat;lon=x.lon;label=x.d;current={kind,key,lat,lon,label};
+    $("aezBox").innerHTML=`<b>${label}</b> — <b>${x.zone}</b>. ${x.note} <span class="mono" style="color:var(--ink-soft)">· part of Bangladesh's ~118,813 km² sovereign maritime area (ITLOS 2012, PCA 2014).</span>`;
+  } else {
+    if(kind==="d"){const x=D.find(d=>d.d===key);lat=x.lat;lon=x.lon;label=x.d;aez=x.aez;}
+    else{lat=aezCentroid[key].lat;lon=aezCentroid[key].lon;label="AEZ "+key;aez=key;}
+    current={kind,key,lat,lon,label};
+    const zinfo=Z[aez];
+    $("aezBox").innerHTML=`<b>${kind==="d"?label+" district":label}</b> — <b>AEZ ${aez}: ${zinfo.name}</b>. ${zinfo.note}`;
+  }
+  $("siteInfo").innerHTML=`<b>${label}</b><br><span class="mono">${lat.toFixed(3)}, ${lon.toFixed(3)} · ${kind==="d"?"district":kind==="m"?"maritime zone":"agro-ecological zone"}</span>`;
+  if(marker)map.removeLayer(marker);
+  marker=L.circleMarker([lat,lon],{radius:9,color:"#9A6A2E",weight:3,fillColor:"#fff",fillOpacity:.9}).addTo(map);
+  if(pan)map.setView([lat,lon],kind==="d"?10:kind==="m"?8:9);
+  $("facVal").textContent=new Set(reg.filter(r=>r.area===kind+":"+key).map(r=>r.fac).filter(Boolean)).size||reg.filter(r=>r.area===kind+":"+key).length;
+  $("loadVal").innerHTML=`${fmt(areaLoad(kind,key),0)}<span class="unit"> kg/yr</span>`;
+  setStatus(`Loading flow & season for ${label}…`);
+  const f=await fetchFlow(lat,lon);
+  if(f){$("qVal").innerHTML=`${fmt(f.now)}<span class="unit"> m³/s</span>`;
+    const low=f.now<(f.min+(f.max-f.min)*0.33);$("qTag").textContent=low?"low — least dilution":"elevated — diluted";$("qTag").className="delta "+(low?"up":"down");}
+  else $("qVal").innerHTML="n/a<span class='unit'> m³/s</span>";
+  const m=new Date().getMonth();const season=(m>=5&&m<=9)?"Monsoon":(m>=11||m<=2)?"Dry":"Transitional";
+  $("seasonVal").textContent=season;$("seasonTag").textContent=season==="Dry"?"worst-case conc.":"diluted";
+  $("updatedTag").textContent="updated "+new Date().toLocaleTimeString();
+  setStatus(`Loaded ${label}. Compare dry-season proxy dates, then build the register for facilities here.`);
+  clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(current)selectArea(current.kind,current.key,false);},30*60*1000);
+}
+function probe(lat,lon){ // nearest district
+  let best=null,bd=1e9;D.forEach(x=>{const d=(x.lat-lat)**2+(x.lon-lon)**2;if(d<bd){bd=d;best=x;}});
+  if(best){$("viewMode").value="district";refreshUnitList();$("unitSel").value="d:"+best.d;selectArea("d",best.d,false);}
+}
+$("loadBtn").addEventListener("click",()=>{const v=$("unitSel").value;if(!v)return;const [k,key]=v.split(":");selectArea(k==="d"?"d":"z",key,true);});
+
+async function fetchFlow(lat,lon){
+  const u=`https://flood-api.open-meteo.com/v1/flood?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&daily=river_discharge&past_days=92&forecast_days=1&cell_selection=nearest`;
+  try{const j=await(await fetch(u)).json();const q=(j.daily?.river_discharge||[]).filter(v=>v!=null);return q.length?{now:q[q.length-1],min:Math.min(...q),max:Math.max(...q)}:null;}catch(e){return null;}
+}
+
+/* ---------- register ---------- */
+const loadKg=r=>r.conc*r.flow*r.days/1000;
+const twpe=r=>loadKg(r)*(TWF[r.pol]??1);
+const overLimit=r=>r.limit&&r.conc>r.limit;
+function areaLabel(a){if(!a)return "—";const [k,key]=a.split(":");return k==="d"?key:"AEZ "+key;}
+function renderReg(){
+  const rows=reg.map((r,i)=>({...r,idx:i,load:loadKg(r),tw:twpe(r)}));
+  rows.sort((a,b)=>{const A=a[sortKey],B=b[sortKey];return ((A>B)-(A<B))*sortDir;});
+  let html="<tr>"+[["area","Area"],["fac","Facility"],["pol","Pollutant"],["conc","mg/L"],["load","kg/yr"],["tw","tox-wt"],["x",""]]
+    .map(([k,l])=>`<th data-k="${k}">${l}${sortKey===k?(sortDir>0?" ▲":" ▼"):""}</th>`).join("")+"</tr>";
+  if(!rows.length)html+="<tr><td colspan='7'>No entries — add a facility, paste rows, or load the example data.</td></tr>";
+  rows.forEach(r=>{html+=`<tr class="${overLimit(r)?"over":""}"><td>${areaLabel(r.area)}</td><td>${r.fac||"—"}</td><td class="${overLimit(r)?"flag":""}">${r.pol}${overLimit(r)?" ▲":""}</td><td>${fmt(r.conc,2)}</td><td>${fmt(r.load,1)}</td><td>${fmt(r.tw,1)}</td><td><button data-del="${r.idx}" style="padding:0 6px;font-size:.6rem">✕</button></td></tr>`;});
+  $("regTable").innerHTML=html;
+  $("regTable").querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(k==="x")return;if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;}renderReg();});
+  $("regTable").querySelectorAll("button[data-del]").forEach(b=>b.onclick=()=>{reg.splice(+b.dataset.del,1);afterRegChange();});
+  if(current){$("loadVal").innerHTML=`${fmt(areaLoad(current.kind,current.key),0)}<span class="unit"> kg/yr</span>`;
+    $("facVal").textContent=new Set(reg.filter(r=>r.area===current.kind+":"+current.key).map(r=>r.fac).filter(Boolean)).size||reg.filter(r=>r.area===current.kind+":"+current.key).length;}
+}
+function afterRegChange(){ renderReg(); drawMarkers(); drawRank(); }
+function curArea(){ return current?(current.kind+":"+current.key):""; }
+$("addBtn").addEventListener("click",()=>{
+  const conc=parseFloat($("conc").value),flow=parseFloat($("flow").value);
+  if(isNaN(conc)||isNaN(flow))return setStatus("Enter concentration and flow.",true);
+  if(!current)return setStatus("Load a district/zone first so the facility is tagged to an area.",true);
+  reg.push({area:curArea(),fac:$("fName").value,pol:$("pName").value,conc,flow,days:+$("days").value||313,limit:$("limit").value?parseFloat($("limit").value):null});
+  $("conc").value="";$("flow").value="";$("limit").value="";$("fName").value="";afterRegChange();setStatus("Entry added to "+(current.label)+".");
+});
+function parseBulk(text){
+  let n=0;text.split(/\r?\n/).forEach(line=>{if(!line.trim())return;const c=line.split(/[,;\t]/).map(x=>x.trim());
+    if(c.length<5)return;const conc=parseFloat(c[3]),flow=parseFloat(c[4]);if(isNaN(conc)||isNaN(flow))return;
+    // area: match district name or "AEZ n" or number
+    let area=curArea(); const a0=(c[0]||"").trim();
+    const dm=D.find(x=>x.d.toLowerCase()===a0.toLowerCase()); const zm=a0.match(/(\d+)/);
+    if(dm)area="d:"+dm.d; else if(/aez/i.test(a0)&&zm&&Z[+zm[1]])area="z:"+zm[1];
+    reg.push({area,fac:c[1],pol:c[2]||"Other",conc,flow,days:c[5]?+c[5]||313:313,limit:c[6]?parseFloat(c[6]):null});n++;});
+  return n;
+}
+$("bulkBtn").addEventListener("click",()=>{const f=$("csv").files[0];
+  if(f){const r=new FileReader();r.onload=()=>{const n=parseBulk(r.result);afterRegChange();setStatus(n+" rows loaded.");};r.readAsText(f);}
+  else if($("paste").value.trim()){const n=parseBulk($("paste").value);afterRegChange();setStatus(n+" rows loaded.");}
+  else setStatus("Paste rows or choose a CSV.",true);});
+$("clearReg").addEventListener("click",()=>{reg=[];afterRegChange();setStatus("Register cleared.");});
+$("exportBtn").addEventListener("click",()=>{
+  const lines=["area,facility,pollutant,conc_mgL,flow_m3day,days,limit_mgL,load_kg_yr,toxwt_kg_yr"];
+  reg.forEach(r=>lines.push([areaLabel(r.area),r.fac,r.pol,r.conc,r.flow,r.days,r.limit??"",loadKg(r).toFixed(1),twpe(r).toFixed(1)].join(",")));
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="agro-pollution-register.csv";a.click();setStatus("Register exported as CSV.");});
+$("demoBtn").addEventListener("click",()=>{
+  reg=[
+    {area:"d:Dhaka",fac:"Hazaribagh legacy / Buriganga outfalls",pol:"Chromium (total)",conc:7.8,flow:14000,days:313,limit:2},
+    {area:"d:Dhaka",fac:"Buriganga municipal+industrial",pol:"BOD",conc:1600,flow:30000,days:365,limit:50},
+    {area:"d:Narayanganj",fac:"Shitalakshya dyeing cluster",pol:"COD",conc:1150,flow:11000,days:313,limit:200},
+    {area:"d:Narayanganj",fac:"Shitalakshya dyeing cluster",pol:"Total suspended solids",conc:520,flow:11000,days:313,limit:150},
+    {area:"d:Gazipur",fac:"Tongi/Konabari textile",pol:"Ammonia-N",conc:34,flow:7000,days:313,limit:5},
+    {area:"d:Dhaka",fac:"Savar tannery estate (Dhaleshwari)",pol:"Sulfide",conc:40,flow:16000,days:313,limit:1},
+    {area:"d:Chattogram",fac:"Karnaphuli industrial outfall",pol:"Lead",conc:1.4,flow:8000,days:313,limit:0.1},
+    {area:"d:Khulna",fac:"Rupsha tannery/jute",pol:"COD",conc:700,flow:5000,days:313,limit:200},
+    {area:"d:Rajshahi",fac:"Padma reference outfall",pol:"BOD",conc:60,flow:4000,days:365,limit:50}
+  ];
+  afterRegChange();setStatus("Example data loaded (illustrative, not official). Switch to 'By AEZ' and watch loads roll up by zone; sort register by tox-wt to see chromium/lead dominate.");
+});
+
+function drawRank(){
+  // aggregate toxic-weighted load by area at current view mode
+  const mode=$("viewMode").value;
+  const agg={};
+  reg.forEach(r=>{const [k,key]=r.area.split(":");
+    let label = mode==="district" ? (k==="d"?key:null) : (k==="z"?"AEZ "+key : "AEZ "+(D.find(x=>x.d===key)?.aez));
+    if(mode==="district"&&k==="z")label="(zone-tagged) AEZ "+key;
+    if(!label)return; agg[label]=(agg[label]||0)+twpe(r);});
+  const rows=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if(rankChart)rankChart.destroy();
+  if(!rows.length){return;}
+  rankChart=new Chart($("rankChart"),{type:"bar",data:{labels:rows.map(r=>r[0]),datasets:[{label:"Toxic-weighted load (kg-eq/yr)",data:rows.map(r=>r[1]),backgroundColor:"#9A6A2E"}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,animation:false,
+      scales:{x:{ticks:{font:{family:"JetBrains Mono",size:9},callback:v=>v>=1000?(v/1000)+"k":v},grid:{color:"rgba(34,49,26,.08)"}},
+        y:{ticks:{font:{family:"JetBrains Mono",size:9}},grid:{display:false}}},
+      plugins:{legend:{labels:{font:{family:"Archivo",size:10},boxWidth:12}}}}});
+}
+$("viewMode").addEventListener("change",()=>{drawMarkers();drawRank();});
+$("divSel").addEventListener("change",()=>{drawMarkers();});
+
+
+/* ---------- computed water-quality indices (NDTI / NDCI) ---------- */
+// NDTI = (Red - Green)/(Red + Green)  — turbidity/suspended sediment
+// NDCI = (RedEdge - Red)/(RedEdge + Red) — chlorophyll-a (approx with available bands)
+// GIBS HLS does not expose raw bands per-pixel; we approximate from the rendered true-color
+// composite (R,G,B 8-bit) for NDTI, and from a vegetation/false-color composite for NDCI.
+const lon2tx=(lon,z)=>Math.floor((lon+180)/360*2**z);
+const lat2ty=(lat,z)=>Math.floor((1-Math.log(Math.tan(lat*Math.PI/180)+1/Math.cos(lat*Math.PI/180))/Math.PI)/2*2**z);
+const tx2lon=(x,z)=>x/2**z*360-180;
+const ty2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/2**z;return 180/Math.PI*Math.atan(.5*(Math.exp(n)-Math.exp(-n)));};
+function loadTile(url){return new Promise(res=>{const im=new Image();im.crossOrigin="anonymous";im.onload=()=>res(im);im.onerror=()=>res(null);im.src=url;});}
+function hlsLayerFor(kind){return kind==="ndci"?"HLS_S30_Nadir_BRDF_Adjusted_Reflectance_Vegetation":"HLS_S30_Nadir_BRDF_Adjusted_Reflectance";}
+async function mosaic(kind,date,z,x0,x1,y0,y1){
+  const cols=x1-x0+1,rows=y1-y0+1;const cv=document.createElement("canvas");cv.width=cols*256;cv.height=rows*256;
+  const ctx=cv.getContext("2d",{willReadFrequently:true});const layer=hlsLayerFor(kind);const jobs=[];
+  for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){
+    const url=`https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/GoogleMapsCompatible_Level12/${z}/${y}/${x}.png`;
+    jobs.push(loadTile(url).then(im=>{if(im)ctx.drawImage(im,(x-x0)*256,(y-y0)*256);}));
+  }
+  await Promise.all(jobs);return ctx.getImageData(0,0,cv.width,cv.height);
+}
+const isWaterPx=(d,i)=> d[i]<70 && d[i+1]<95 && d[i+2]<120 && d[i+3]>200; // dark bluish = water
+function indexValue(kind,d,i){
+  const R=d[i],G=d[i+1],B=d[i+2];
+  if(kind==="ndci"){ // vegetation composite: red channel ~ NIR/red-edge, green ~ red
+    const a=R,b=G; return (a+b)?(a-b)/(a+b):0;
+  }
+  return (R+G)?(R-G)/(R+G):0; // NDTI
+}
+async function computeIndex(forPointOnly){
+  const kind=$("proxy").value==="ndci"||(forPointOnly&&$("tsIndex").value==="ndci")?"ndci":"ndti";
+  const z=Math.min(Math.max(map.getZoom(),9),12);
+  let cx,cy,half;
+  if(forPointOnly&&current){ // small box around the point
+    const tcx=lon2tx(current.lon,z),tcy=lat2ty(current.lat,z);
+    var x0=tcx,x1=tcx,y0=tcy,y1=tcy;
+  }else{
+    const b=map.getBounds();var x0=lon2tx(b.getWest(),z),x1=lon2tx(b.getEast(),z),y0=lat2ty(b.getNorth(),z),y1=lat2ty(b.getSouth(),z);
+    if((x1-x0+1)*(y1-y0+1)>30){ if(!forPointOnly)setStatus("View too large — zoom in a little and press Compute again.",true); return null; }
+  }
+  return forPointOnly? {kind,z,x0,x1,y0,y1} : finishCompute(kind,z,x0,x1,y0,y1,$("dateB").value);
+}
+async function finishCompute(kind,z,x0,x1,y0,y1,date){
+  const img=await mosaic(kind,date,z,x0,x1,y0,y1);const d=img.data,w=img.width,h=img.height;
+  const out=document.createElement("canvas");out.width=w;out.height=h;const octx=out.getContext("2d");const o=octx.createImageData(w,h);
+  let sum=0,n=0;
+  for(let i=0;i<w*h*4;i+=4){
+    if(!isWaterPx(d,i))continue;
+    const v=indexValue(kind,d,i);sum+=v;n++;
+    // colour ramp: low=blue, mid=yellow, high=red
+    const t=Math.max(0,Math.min(1,(v+0.1)/0.5));
+    o.data[i]=Math.round(40+215*t);o.data[i+1]=Math.round(120+60*(1-Math.abs(t-0.5)*2));o.data[i+2]=Math.round(180*(1-t));o.data[i+3]=200;
+  }
+  octx.putImageData(o,0,0);
+  const bounds=[[ty2lat(y1+1,z),tx2lon(x0,z)],[ty2lat(y0,z),tx2lon(x1+1,z)]];
+  if(idxOverlay)map.removeLayer(idxOverlay);
+  idxOverlay=L.imageOverlay(out.toDataURL(),bounds,{opacity:.75}).addTo(map);
+  return {mean:n?sum/n:null,n};
+}
+$("computeBtn").addEventListener("click",async()=>{
+  setStatus("Computing water index from Sentinel-2 composite for the current view…");
+  try{
+    const r=await computeIndex(false);
+    if(!r)return;
+    const kind=$("proxy").value==="ndci"?"ndci":"ndti";
+    const el=$(kind==="ndci"?"ndciVal":"ndtiVal");
+    el.textContent=r.mean!=null?r.mean.toFixed(3):"—";
+    const tag=$(kind==="ndci"?"ndciTag":"ndtiTag");
+    if(r.mean!=null){const lvl=r.mean> (kind==="ndci"?0.1:0.05)?"elevated":r.mean>(kind==="ndci"?0:0)?"moderate":"low";
+      tag.textContent=`${lvl} · ${r.n} water px`;tag.className="delta "+(lvl==="elevated"?"up":"flat");}
+    $("cmpResult").style.display="flex";
+    $("cmpResult").innerHTML=`<span><b>${kind.toUpperCase()}</b> mean for view = <b>${r.mean!=null?r.mean.toFixed(3):"n/a"}</b> over ${r.n} water pixels (${$("dateB").value}). Higher = ${kind==="ndci"?"more chlorophyll/algae (eutrophication)":"more turbidity/suspended sediment"}. Overlay: blue→yellow→red.</span>`;
+    setStatus("Index computed. Switch the Proxy layer to NDTI/NDCI label to recompute for that index, or build a time-series below.");
+  }catch(e){setStatus("Compute failed: "+e.message+" (tiles may be blocked here — deploy or open in a browser).",true);}
+});
+// recompute when user picks the computed layers explicitly
+const _applyImg=applyImg;
+
+/* ---------- time-series ---------- */
+async function pointIndexForDate(kind,date){
+  const z=11;const tcx=lon2tx(current.lon,z),tcy=lat2ty(current.lat,z);
+  const img=await mosaic(kind,date,z,tcx,tcx,tcy,tcy);const d=img.data;let sum=0,n=0;
+  // sample central 64x64 block
+  for(let yy=96;yy<160;yy++)for(let xx=96;xx<160;xx++){const i=(yy*256+xx)*4;if(!isWaterPx(d,i))continue;sum+=indexValue(kind,d,i);n++;}
+  return n>20? sum/n : null;
+}
+$("tsBtn").addEventListener("click",async()=>{
+  if(!current)return setStatus("Select a point/area first.",true);
+  const kind=$("tsIndex").value, months=+$("tsMonths").value;
+  setStatus(`Building ${months}-month ${kind.toUpperCase()} series — sampling one clear-ish date per month…`);
+  const labels=[],vals=[];const now=new Date();
+  try{
+    for(let m=months-1;m>=0;m--){
+      const dt=new Date(now.getFullYear(),now.getMonth()-m,15);
+      const ds=dt.toISOString().slice(0,10);
+      labels.push(dt.toLocaleDateString(undefined,{month:"short",year:"2-digit"}));
+      vals.push(await pointIndexForDate(kind,ds));
+    }
+    if(tsChart)tsChart.destroy();
+    tsChart=new Chart($("tsChart"),{type:"line",data:{labels,datasets:[{label:`${kind.toUpperCase()} at ${current.label}`,data:vals,
+      borderColor:kind==="ndci"?"#3F571F":"#1C7A9A",backgroundColor:kind==="ndci"?"rgba(63,87,31,.12)":"rgba(28,122,154,.12)",
+      borderWidth:2,pointRadius:2,spanGaps:true,fill:true,tension:.25}]},
+      options:{responsive:true,maintainAspectRatio:false,animation:false,
+        scales:{x:{ticks:{maxTicksLimit:8,font:{family:"JetBrains Mono",size:9}},grid:{display:false}},
+          y:{ticks:{font:{family:"JetBrains Mono",size:9}},grid:{color:"rgba(34,49,26,.08)"},title:{display:true,text:kind.toUpperCase()+" index",font:{family:"JetBrains Mono",size:9}}}},
+        plugins:{legend:{labels:{font:{family:"Archivo",size:10},boxWidth:12}}}}});
+    const got=vals.filter(v=>v!=null).length;
+    setStatus(`Series built: ${got}/${months} months returned clear water pixels (gaps = cloud/no pass). Rising trend = worsening turbidity/algae.`);
+  }catch(e){setStatus("Series failed: "+e.message,true);}
+});
+
+/* ---------- field samples (Tier 3) ---------- */
+function renderFS(){
+  let html="<tr><th>Site</th><th>Parameter</th><th>Value</th><th>Date</th><th></th></tr>";
+  if(!fieldSamples.length)html+="<tr><td colspan='5'>No field samples logged yet.</td></tr>";
+  fieldSamples.forEach((s,i)=>{html+=`<tr><td>${s.name||"—"}</td><td>${s.par}</td><td>${s.val}</td><td>${s.date||"—"}</td><td><button data-fd="${i}" style="padding:0 6px;font-size:.6rem">✕</button></td></tr>`;});
+  $("fsTable").innerHTML=html;
+  $("fsTable").querySelectorAll("button[data-fd]").forEach(b=>b.onclick=()=>{fieldSamples.splice(+b.dataset.fd,1);renderFS();drawFieldMarkers();});
+}
+function drawFieldMarkers(){
+  fieldMarkers.forEach(m=>map.removeLayer(m));fieldMarkers.length=0;
+  fieldSamples.forEach(s=>{if(s.lat==null)return;
+    const m=L.marker([s.lat,s.lon]).addTo(map).bindPopup(`<b>${s.name||"sample"}</b><br>${s.par}: ${s.val}<br>${s.date||""}`);
+    fieldMarkers.push(m);});
+}
+$("fsAdd").addEventListener("click",()=>{
+  const val=parseFloat($("fsVal").value);if(isNaN(val))return setStatus("Enter a numeric value.",true);
+  let lat=null,lon=null;const ll=$("fsLL").value.trim();
+  if(ll){const m=ll.split(/[,\s]+/).map(parseFloat);if(m.length>=2){lat=m[0];lon=m[1];}}
+  else if(current){lat=current.lat;lon=current.lon;}
+  fieldSamples.push({name:$("fsName").value,par:$("fsPar").value,val,date:$("fsDate").value,lat,lon});
+  $("fsVal").value="";$("fsName").value="";$("fsLL").value="";
+  renderFS();drawFieldMarkers();setStatus("Field sample logged.");
+});
+$("fsExport").addEventListener("click",()=>{
+  const lines=["site,parameter,value,date,lat,lon"];
+  fieldSamples.forEach(s=>lines.push([s.name,s.par,s.val,s.date,s.lat??"",s.lon??""].join(",")));
+  const blob=new Blob([lines.join("\n")],{type:"text/csv"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="field-samples.csv";a.click();
+});
+$("fsClear").addEventListener("click",()=>{fieldSamples=[];renderFS();drawFieldMarkers();});
+(function(){const t=$("fsDate");if(t)t.value=new Date().toISOString().slice(0,10);})();
+renderFS();
+
+/* ---------- boot ---------- */
+fillSelectors();
+initMap();
+renderReg();
+selectArea("d","Dhaka",true);
+setStatus("Ready. Choose By district or By agro-ecological zone, pick an area, and load it.");
+</script>
+</body>
+</html>

@@ -66,6 +66,29 @@
   .bd-list button{padding:1px 7px; font-size:.62rem; margin-left:auto}
   .bd-help{padding:0 12px 12px; font-family:var(--mono); font-size:.64rem; color:var(--ink-soft); line-height:1.5}
 
+
+  .pane-ef{--paper:#EAEFEF;--panel:#FAFCFC;--ink:#10322F;--ink-soft:#48635F;--accent:#0F8A7E;--accent-deep:#0A5F57;
+    --accent2:#9A5B2A;--alert:#B3322C;--hairline:#C7D5D2;--marker:#9A5B2A;--driver:#0F8A7E;
+    --fill-top:rgba(179,50,44,.30);--fill-bot:rgba(15,138,126,.26);--up:#B3322C;--down:#3E7C4F}
+  #tab-ef{--tab-bg:#EAEFEF; --tab-ink:#10322F} #tab-ef .tdot{background:#0F8A7E}
+
+  .pane-cs{--paper:#E7EEF1;--panel:#F8FBFC;--ink:#0F2A38;--ink-soft:#4A6472;--accent:#0E6FA8;--accent-deep:#0A4F79;
+    --accent2:#C0392B;--alert:#B3422C;--hairline:#C6D6DC;--marker:#C0392B;--driver:#0E6FA8;
+    --fill-top:rgba(192,57,43,.28);--fill-bot:rgba(14,111,168,.30);--up:#C0392B;--down:#3E7C4F}
+  #tab-cs{--tab-bg:#E7EEF1; --tab-ink:#0F2A38} #tab-cs .tdot{background:#0E6FA8}
+  .cyc-list{list-style:none; padding:6px 12px 10px; font-family:var(--mono); font-size:.68rem; display:flex; flex-direction:column; gap:5px; max-height:280px; overflow:auto}
+  .cyc-list li{display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:4px; border-bottom:1px solid var(--hairline)}
+  .cyc-list .catchip{flex:none; width:38px; text-align:center; font-weight:700; border-radius:3px; padding:2px 0; color:#fff; font-size:.6rem}
+  .reg-table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:.68rem}
+  .reg-table th,.reg-table td{padding:6px 8px; border-bottom:1px solid var(--hairline); text-align:right; white-space:nowrap}
+  .reg-table th:first-child,.reg-table td:first-child,.reg-table th:nth-child(2),.reg-table td:nth-child(2){text-align:left; white-space:normal}
+  .reg-table th{font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:600; cursor:pointer; position:sticky; top:0; background:var(--panel)}
+  .reg-table tr.over td{background:rgba(179,50,44,.07)}
+  .reg-table td.flag{color:var(--alert); font-weight:700}
+  .reg-wrap{max-height:300px; overflow:auto; padding:0 12px}
+  .ef-form{display:flex; flex-direction:column; gap:8px; padding:12px}
+  .ef-form textarea{font-family:var(--mono); font-size:.7rem; min-height:70px; border:1px solid var(--hairline); border-radius:3px; padding:6px; background:var(--panel); color:var(--ink)}
+
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
   body{font-family:var(--body); background:#10211C; display:flex; flex-direction:column; min-height:100vh}
@@ -185,7 +208,10 @@
     <button class="tab" id="tab-ch" role="tab" aria-selected="false"><span class="tdot"></span>Charland <small>silt & land change</small></button>
     <button class="tab" id="tab-ix" role="tab" aria-selected="false"><span class="tdot"></span>Confluence <small>interactions</small></button>
     <button class="tab" id="tab-bd" role="tab" aria-selected="false"><span class="tdot"></span>Bridge <small>institutional data</small></button>
+    <button class="tab" id="tab-ef" role="tab" aria-selected="false"><span class="tdot"></span>Effluent <small>water quality &amp; loads</small></button>
+    <button class="tab" id="tab-cs" role="tab" aria-selected="false"><span class="tdot"></span>Coastal <small>estuary &amp; cyclones</small></button>
   </nav>
+  <button id="bdInstallBtn" title="Install GBM Observatory as an app" style="display:none;margin-left:10px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#C8732A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">⬇ Install app</button>
 </header>
 
 <div class="pane pane-rb" id="pane-rb">
@@ -729,6 +755,197 @@
   </main>
   <div class="pane-foot">
   PURPOSE · The Bridge station is the Observatory's interface to Bangladesh's water institutions. BWDB (gauges, groundwater wells, morphology surveys), WARPO (the National Water Resources Database), CEGIS (annual erosion predictions and geospatial studies), IWM (calibrated hydraulic and hydrodynamic model results) and BIWTA (hydrographic charts and navigation routes) hold the authoritative ground truth that satellites and global models approximate. This station lets authorized users bring that data in — as CSV series or GeoJSON layers — overlay it on the same maps, and quantify the agreement between official observations and the free global feeds the other stations run on. Everything runs client-side: institutional data never leaves the user's machine, which keeps data-sharing agreements intact.
+  </div>
+</div>
+
+<div class="pane pane-ef" id="pane-ef">
+  <div class="station-bar">
+    <div class="controls">
+      <select id="ef-siteSelect" aria-label="Select water-quality reach">
+        <option value="23.78,90.36">Buriganga · Dhaka (tannery/industrial)</option>
+        <option value="23.95,90.38">Turag · Tongi</option>
+        <option value="23.88,90.47">Balu · Dhaka east</option>
+        <option value="24.00,90.40">Tongi Khal / Turag confluence</option>
+        <option value="23.70,90.50">Shitalakshya · Narayanganj (dyeing)</option>
+        <option value="24.08,90.27">Dhaleshwari · Savar (relocated tanneries)</option>
+        <option value="22.82,89.55">Rupsha–Bhairab · Khulna</option>
+        <option value="24.37,88.60">Padma · Rajshahi (reference, cleaner)</option>
+        <option value="23.23,90.64">Lower Meghna · Chandpur (dilution)</option>
+      </select>
+      <input type="text" id="ef-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
+      <button id="ef-loadBtn" class="btn-primary">Load reach</button>
+    </div>
+    <div id="ef-status">Ready — this station loads when first opened.</div>
+  </div>
+  <main>
+    <section class="panel">
+      <div class="panel-h"><span class="dot" style="background:var(--accent)"></span> Optical water-quality proxies
+        <span class="tag">Sentinel-2 / HLS 30 m · NASA GIBS · click map to probe</span>
+      </div>
+      <div class="map-tools">
+        <div class="field">
+          <label for="ef-proxy">Proxy layer</label>
+          <select id="ef-proxy">
+            <option value="truecolor">True color (context)</option>
+            <option value="turbidity">Turbidity / sediment (red reflectance)</option>
+            <option value="falsecolor">False color (algae/veg = red)</option>
+          </select>
+        </div>
+        <div class="field"><label for="ef-dateA">Date A (before)</label><input type="date" id="ef-dateA"></div>
+        <div class="field"><label for="ef-dateB">Date B (after)</label><input type="date" id="ef-dateB"></div>
+        <div class="swipe"><label for="ef-fade">Fade A ⇄ B</label><input type="range" id="ef-fade" min="0" max="100" value="100" aria-label="Fade between dates"><div class="ends"><span>A</span><span>B</span></div></div>
+        <div class="field"><label>&nbsp;</label><button id="ef-applyImg">Update</button></div>
+        <div class="field"><label>&nbsp;</label><button id="ef-dryBtn" title="Dry season shows industrial signal with least dilution">Dry-season view</button></div>
+      </div>
+      <div class="legend">
+        <span>Visual proxies only — satellites see colour, turbidity, algae &amp; thermal, not chemicals.</span>
+        <span style="margin-left:auto">Confirm with the loading register and lab data →</span>
+      </div>
+      <div id="ef-map" role="application" aria-label="Water-quality proxy map" style="height:430px"></div>
+    </section>
+
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h"><span class="dot live"></span> Reach proxy readout <span class="tag" id="ef-updatedTag">—</span></div>
+        <div class="sitebar" id="ef-siteInfo">No reach loaded.</div>
+        <div class="readout">
+          <div class="cell"><div class="lbl">Dilution capacity (flow)</div><div class="val" id="ef-qVal">—<span class="unit"> m³/s</span></div><div class="delta flat" id="ef-qTag">—</div></div>
+          <div class="cell"><div class="lbl">Season</div><div class="val" id="ef-seasonVal" style="font-size:1.05rem">—</div><div class="delta flat" id="ef-seasonTag">dilution context</div></div>
+          <div class="cell"><div class="lbl">Facilities on this reach</div><div class="val" id="ef-facVal">—</div></div>
+          <div class="cell"><div class="lbl">Total load (register)</div><div class="val" id="ef-loadVal">—<span class="unit"> kg/yr</span></div></div>
+        </div>
+        <div class="forecast-line" id="ef-proxyNote">Optical proxies flag where to look; the loading register quantifies who discharges what. Low river flow (dry season) concentrates pollutants — the worst-case window.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Discharge loading register <span class="tag">EPA DMR method · load = conc × flow × time</span></div>
+        <div class="ef-form">
+          <div class="bd-row">
+            <div class="field" style="flex:2"><label>Facility / outfall name</label><input type="text" id="ef-fName" placeholder="e.g. Hazaribagh tannery cluster"></div>
+            <div class="field"><label>Pollutant</label>
+              <select id="ef-pName">
+                <option>BOD</option><option>COD</option><option>Chromium (total)</option><option>Ammonia-N</option>
+                <option>Total suspended solids</option><option>Lead</option><option>Cadmium</option><option>Sulfide</option>
+                <option>Phenol</option><option>Oil &amp; grease</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="bd-row">
+            <div class="field"><label>Concentration</label><input type="number" id="ef-conc" placeholder="mg/L" step="any"></div>
+            <div class="field"><label>Flow</label><input type="number" id="ef-flow" placeholder="m³/day" step="any"></div>
+            <div class="field"><label>Days/yr</label><input type="number" id="ef-days" value="313"></div>
+            <div class="field"><label>Permit limit</label><input type="number" id="ef-limit" placeholder="mg/L (opt)" step="any"></div>
+            <div class="field"><label>&nbsp;</label><button id="ef-addBtn" class="btn-primary">Add</button></div>
+          </div>
+          <textarea id="ef-paste" placeholder="…or paste/CSV bulk rows: facility,pollutant,conc_mgL,flow_m3day,days,limit_mgL"></textarea>
+          <div class="bd-row">
+            <div class="field"><label>CSV file</label><input type="file" id="ef-csv" accept=".csv,.txt"></div>
+            <div class="field"><label>&nbsp;</label><button id="ef-bulkBtn">Load rows</button></div>
+            <div class="field"><label>&nbsp;</label><button id="ef-demoBtn">Load example data</button></div>
+            <div class="field"><label>&nbsp;</label><button id="ef-clearReg">Clear</button></div>
+          </div>
+        </div>
+        <div class="reg-wrap"><table class="reg-table" id="ef-regTable"><tbody><tr><td>No entries yet — add a facility, paste rows, or load the example data.</td></tr></tbody></table></div>
+        <div class="forecast-line" id="ef-regNote">Load (kg/yr) = concentration (mg/L) × flow (m³/day) × days ÷ 1000. Toxic-weighted load applies a relative toxicity factor so a kilo of chromium ranks above a kilo of BOD. ▲ marks loads exceeding the entered permit limit. Click a column header to sort.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Facility results <span class="tag">modeled on EPA ECHO's Water Pollution Search results view</span></div>
+        <div class="controls" style="padding:8px 12px 0">
+          <input type="text" id="ef-facFilter" placeholder="Filter by facility name…" style="flex:2" aria-label="Filter facilities by name">
+          <button id="ef-csvBtn">⇓ Download all data (CSV)</button>
+          <span class="tag" id="ef-facCount">0 facilities</span>
+        </div>
+        <div class="reg-wrap"><table class="reg-table" id="ef-facTable"><tbody><tr><td>No facilities yet.</td></tr></tbody></table></div>
+        <div id="ef-facDetail"></div>
+        <div class="forecast-line">One row per facility, aggregated from the register above — pollutants monitored, total load, toxic-weighted load, and exceedance count against whatever permit limit you entered per pollutant. Click a facility row to open its pollutant-level report, the way ECHO's results table links out to a per-facility DMR report. This aggregates the data you enter — it is not a live connection to EPA's ICIS-NPDES database, which has no Bangladesh facilities.</div>
+      </section>
+    </div>
+  </main>
+  <div class="pane-foot">
+  METHOD · Two complementary halves, mirroring how pollution is actually monitored. (1) Optical proxies: Sentinel-2/HLS and true/false-colour composites from NASA GIBS reveal turbidity and suspended-sediment plumes, algal blooms (eutrophication from nutrient loading) and the spatial footprint of discharges; these are physical proxies — remote sensing cannot measure chromium, BOD, ammonia or other chemicals directly, and optically dark "clean-looking" water can still be highly polluted. (2) Loading register: a faithful re-implementation of the US EPA Water Pollutant Loading Tool (DMR) method — load = concentration × wastewater flow × duration × unit conversion (EPA, 2024) — ranked by facility and pollutant, with a toxic-weighting option and a load-over-permit-limit flag. (3) Facility results: a facility-level rollup of the register, patterned on EPA ECHO's Water Pollution Search "View Facilities" results table — sortable, filterable, downloadable, and drillable into a per-facility pollutant report. It requires reported or measured effluent data as input (entered, pasted or CSV); it does not invent concentrations. In Bangladesh the authoritative effluent and ambient water-quality data rest with the Department of Environment (DoE) under the ECR rules, with BWDB, and with academic monitoring; use this register to organize and rank that data, and the proxies to target where new sampling is most needed. Screening tool — not a compliance determination.
+  </div>
+</div>
+
+<div class="pane pane-cs" id="pane-cs">
+  <div class="station-bar">
+    <div class="controls">
+      <select id="cs-siteSelect" aria-label="Select coastal point">
+        <option value="21.75,89.55">Sundarbans · Mongla mouth</option>
+        <option value="21.85,90.95" selected>Meghna estuary mouth · Bhola</option>
+        <option value="21.80,90.15">Kuakata · Patuakhali coast</option>
+        <option value="21.45,91.95">Cox's Bazar coast</option>
+        <option value="22.20,91.80">Chittagong coast</option>
+      </select>
+      <input type="text" id="cs-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
+      <button id="cs-loadBtn" class="btn-primary">Load point</button>
+      <button id="cs-cycBtn">↻ Refresh cyclone tracks</button>
+    </div>
+    <div id="cs-status">Ready — this station loads when first opened.</div>
+  </div>
+  <main>
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--accent2)"></span> Coast &amp; estuary imagery
+          <span class="tag">NASA GIBS · click map to probe · cyclone tracks overlaid</span>
+        </div>
+        <div class="map-tools">
+          <div class="field">
+            <label for="cs-layerSel">Imagery source</label>
+            <select id="cs-layerSel">
+              <option value="VIIRS_SNPP_CorrectedReflectance_TrueColor|GoogleMapsCompatible_Level9|jpg">VIIRS true color (375 m, daily)</option>
+              <option value="MODIS_Terra_CorrectedReflectance_TrueColor|GoogleMapsCompatible_Level9|jpg">MODIS true color (250 m, daily)</option>
+              <option value="HLS_S30_Nadir_BRDF_Adjusted_Reflectance|GoogleMapsCompatible_Level12|png">HLS · Sentinel-2 (30 m)</option>
+            </select>
+          </div>
+          <div class="field"><label>&nbsp;</label><button id="cs-applyImg">Update imagery</button></div>
+        </div>
+        <div id="cs-map" role="application" aria-label="Coastal and estuary map" style="height:430px"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Bay of Bengal cyclone tracks <span class="tag" id="cs-cycTag">IBTrACS · last 3 years</span></div>
+        <ul class="cyc-list" id="cs-cycList"><li>Loading storm tracks…</li></ul>
+        <div class="forecast-line" id="cs-cycNote">Tracks filtered to the Bay of Bengal sub-basin. This is merged best-track data, not an operational forecast — for active-storm guidance use the Bangladesh Meteorological Department.</div>
+      </section>
+    </div>
+
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h"><span class="dot live"></span> Point readout <span class="tag" id="cs-updatedTag">—</span></div>
+        <div class="sitebar" id="cs-siteInfo">No point loaded.</div>
+        <div class="readout">
+          <div class="cell"><div class="lbl">Significant wave height</div><div class="val" id="cs-waveVal">—<span class="unit"> m</span></div><div class="delta flat" id="cs-waveTag">—</div></div>
+          <div class="cell"><div class="lbl">Wave period</div><div class="val" id="cs-periodVal">—<span class="unit"> s</span></div></div>
+          <div class="cell"><div class="lbl">Sea surface temp</div><div class="val" id="cs-sstVal">—<span class="unit"> °C</span></div></div>
+          <div class="cell"><div class="lbl">River discharge at mouth</div><div class="val" id="cs-qVal">—<span class="unit"> m³/s</span></div><div class="delta flat" id="cs-qTag">—</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Compound coastal-flood screen <span class="tag">heuristic 0–100</span></div>
+        <div class="risk-body">
+          <div class="staff" id="cs-staff" aria-hidden="true">
+            <div class="fill" id="cs-staffFill" style="height:0%"></div>
+            <div class="marker" id="cs-staffMarker" style="bottom:0%" data-val="—"></div>
+          </div>
+          <div class="risk-info">
+            <h3 id="cs-riskCat" class="r-low">—</h3>
+            <p id="cs-riskText">Load a point to combine wave energy with river discharge at the estuary mouth.</p>
+            <div class="drivers">
+              <div class="driver"><span>Wave energy</span><div class="bar"><i id="cs-dWave" style="width:0%"></i></div><span id="cs-dWaveV">—</span></div>
+              <div class="driver"><span>River discharge</span><div class="bar"><i id="cs-dQ" style="width:0%"></i></div><span id="cs-dQV">—</span></div>
+              <div class="driver"><span>Active cyclone nearby</span><div class="bar"><i id="cs-dCyc" style="width:0%"></i></div><span id="cs-dCycV">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="forecast-line" id="cs-fcLine">Screening indicator only — not a storm-surge forecast. For official warnings use the Bangladesh Meteorological Department and FFWC.</div>
+      </section>
+    </div>
+  </main>
+  <div class="pane-foot">
+  DATA · Imagery: NASA GIBS — VIIRS (375 m, daily), MODIS true color (250 m, daily) and Harmonized Landsat–Sentinel (30 m) over the coast and estuary mouth. Marine conditions: Open-Meteo Marine API (ECMWF/GFS wave model) — significant wave height, peak period, sea-surface temperature; global coverage, no key. River discharge: GloFAS v4 (Copernicus) via the free Open-Meteo Flood API, at the coordinate nearest the chosen mouth. Cyclone tracks: NOAA IBTrACS v4 (last 3 years), served by NOAA's public ERDDAP API, filtered to the Bay of Bengal sub-basin — merged best-track data led by IMD New Delhi and other WMO agencies, updated a few times weekly; it is a historical/near-real-time record, not an operational advisory.
+  <br>METHOD · The compound-flood screen combines three 0–100 sub-scores at the chosen point: wave energy (significant wave height scaled against a 3 m reference), river discharge (against the reach's own modeled 90-day maximum), and an active-cyclone proximity flag (any Bay of Bengal track point within ~150 km and 3 days of today, from the list above). The combined score is a simple mean, meant to flag when several coastal-flood drivers line up at once — it is not a validated storm-surge or compound-flood model. For real evacuation or engineering decisions, use official BMD cyclone warnings, FFWC water-level forecasts, and BWDB/CEGIS coastal studies.
   </div>
 </div>
 <script>
@@ -2117,7 +2334,433 @@ return {
 };
 })();
 
-const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd };
+
+const M_ef = (() => {
+const P="ef-";
+const $ = id => document.getElementById("ef-"+id);
+const setStatus=(m,e=false)=>{const s=$("status");s.textContent=m;s.className=e?"err":"";};
+const fmt=(n,d=0)=>(n==null||isNaN(n))?"—":n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+let map=null, layA=null, layB=null, marker=null, refreshTimer=null;
+let reg=[];   // {fac,pol,conc,flow,days,limit}
+let sortKey="load", sortDir=-1;
+
+// toxic weighting factors (illustrative, relative; EPA TWFs are pollutant-specific)
+const TWF={"BOD":0.02,"COD":0.02,"Total suspended solids":0.01,"Ammonia-N":0.5,"Sulfide":1,"Phenol":2,
+  "Oil & grease":0.1,"Chromium (total)":5,"Lead":12,"Cadmium":25,"Other":1};
+
+const GIBS={
+  truecolor:["HLS_S30_Nadir_BRDF_Adjusted_Reflectance","GoogleMapsCompatible_Level12","png"],
+  turbidity:["HLS_S30_Nadir_BRDF_Adjusted_Reflectance","GoogleMapsCompatible_Level12","png"], // same tiles; turbidity read visually from sediment colour
+  falsecolor:["HLS_S30_Nadir_BRDF_Adjusted_Reflectance_Vegetation","GoogleMapsCompatible_Level12","png"]
+};
+function gurl(layer,tms,ext,date){return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/${tms}/{z}/{y}/{x}.${ext}`;}
+function isoDay(d){return d.toISOString().slice(0,10);}
+function initMap(){
+  map=L.map("ef-map",{zoomControl:true}).setView([23.78,90.36],12);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {attribution:"Esri World Imagery",maxZoom:18}).addTo(map);
+  const b=new Date(Date.now()-5*864e5), a=new Date(b.getTime()-120*864e5);
+  $("dateB").value=isoDay(b); $("dateA").value=isoDay(a);
+  $("dateB").max=isoDay(new Date()); $("dateA").max=isoDay(new Date());
+  applyImg();
+  map.on("click",e=>loadReach(e.latlng.lat,e.latlng.lng,"Probed point",false));
+}
+function applyImg(){
+  const [l,t,e]=GIBS[$("proxy").value];
+  const dA=$("dateA").value,dB=$("dateB").value;
+  if(layA)map.removeLayer(layA); if(layB)map.removeLayer(layB);
+  const o={maxNativeZoom:12,maxZoom:18,attribution:"NASA GIBS"};
+  layA=L.tileLayer(gurl(l,t,e,dA),o).addTo(map);
+  layB=L.tileLayer(gurl(l,t,e,dB),{...o,opacity:$("fade").value/100}).addTo(map);
+  const tip = $("proxy").value==="turbidity" ? "Tan/brown water = high turbidity & suspended sediment; sharp colour fronts often mark a discharge or tributary inflow."
+    : $("proxy").value==="falsecolor" ? "Bright red = vegetation & algae; red blooms on open water signal eutrophication from nutrient loading."
+    : "True colour for context. Blank tiles = cloud/no pass; nudge the date.";
+  setStatus(`Proxy A=${dA} vs B=${dB}. ${tip}`);
+}
+$("applyImg").addEventListener("click",applyImg);
+$("proxy").addEventListener("change",applyImg);
+$("fade").addEventListener("input",e=>{if(layB)layB.setOpacity(e.target.value/100);});
+$("dryBtn").addEventListener("click",()=>{
+  const now=new Date(); const y=now.getMonth()>=2?now.getFullYear():now.getFullYear()-1;
+  $("dateA").value=`${y-1}-03-15`; $("dateB").value=`${y}-03-15`; applyImg();
+  setStatus("Dry-season view (mid-March): lowest river flow, least dilution, clearest skies — industrial plumes are most visible now.");
+});
+
+async function fetchFlow(lat,lon){
+  const u=`https://flood-api.open-meteo.com/v1/flood?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&daily=river_discharge&past_days=92&forecast_days=1&cell_selection=nearest`;
+  try{const j=await(await fetch(u)).json();const q=(j.daily?.river_discharge||[]).filter(v=>v!=null);
+    return q.length?{now:q[q.length-1],min:Math.min(...q),max:Math.max(...q)}:null;}catch(e){return null;}
+}
+
+/* ---------- register ---------- */
+function loadKg(r){ return r.conc*r.flow*r.days/1000; }            // mg/L × m³/day = g/day; ×days /1000 = kg/yr
+function twpe(r){ return loadKg(r)*(TWF[r.pol]??1); }
+function overLimit(r){ return r.limit&&r.conc>r.limit; }
+
+/* ---------- facility results (ECHO-style rollup) ---------- */
+let facSortKey="tw", facSortDir=-1, facOpen=null;
+function facSummary(){
+  const by={};
+  reg.forEach((r,i)=>{
+    const key=r.fac||"(unnamed facility)";
+    if(!by[key]) by[key]={fac:key, rows:[], n:0, load:0, tw:0, exceed:0, worst:null, worstTw:-1};
+    const load=loadKg(r), tw=twpe(r), ex=overLimit(r);
+    by[key].rows.push({...r, idx:i, load, tw, ex});
+    by[key].n++; by[key].load+=load; by[key].tw+=tw; if(ex) by[key].exceed++;
+    if(tw>by[key].worstTw){ by[key].worstTw=tw; by[key].worst=r.pol; }
+  });
+  return Object.values(by);
+}
+function renderFacTable(){
+  const filter=($("facFilter")?.value||"").trim().toLowerCase();
+  let facs=facSummary().filter(f=>!filter||f.fac.toLowerCase().includes(filter));
+  facs.sort((a,b)=>{const v=(a[facSortKey]>b[facSortKey]?1:a[facSortKey]<b[facSortKey]?-1:0);return v*facSortDir;});
+  $("facCount").textContent=`${facs.length} facilit${facs.length===1?"y":"ies"}`;
+  const cols=[["fac","Facility"],["n","Pollutants"],["load","Total load kg/yr"],["tw","Tox-wt kg-eq/yr"],["exceed","Exceedances"],["worst","Worst pollutant"]];
+  let html="<tr>"+cols.map(([k,l])=>`<th data-k="${k}">${l}${facSortKey===k?(facSortDir>0?" ▲":" ▼"):""}</th>`).join("")+"<th>Status</th></tr>";
+  if(!facs.length) html+="<tr><td colspan='7'>No facilities yet — add entries in the register above.</td></tr>";
+  facs.forEach(f=>{
+    const status=f.exceed>0?`<span class="delta up">⚠ ${f.exceed} exceedance${f.exceed>1?"s":""}</span>`:`<span class="delta flat">within reported limits</span>`;
+    html+=`<tr class="fac-row" data-fac="${encodeURIComponent(f.fac)}" style="cursor:pointer">`
+      +`<td>${facOpen===f.fac?"▾":"▸"} ${f.fac}</td><td>${f.n}</td><td>${fmt(f.load,1)}</td><td>${fmt(f.tw,1)}</td>`
+      +`<td>${f.exceed}</td><td>${f.worst||"—"}</td><td>${status}</td></tr>`;
+  });
+  $("facTable").innerHTML=html;
+  $("facTable").querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k; if(facSortKey===k)facSortDir*=-1; else{facSortKey=k;facSortDir=-1;} renderFacTable();
+  });
+  $("facTable").querySelectorAll("tr.fac-row").forEach(tr=>tr.onclick=()=>{
+    const fac=decodeURIComponent(tr.dataset.fac);
+    facOpen = facOpen===fac ? null : fac;
+    renderFacTable(); renderFacDetail();
+  });
+}
+function renderFacDetail(){
+  if(!facOpen){ $("facDetail").innerHTML=""; return; }
+  const f=facSummary().find(x=>x.fac===facOpen);
+  if(!f){ $("facDetail").innerHTML=""; return; }
+  let html=`<div class="panel-h" style="margin-top:8px">Pollutant report — ${f.fac} <span class="tag">${f.n} pollutant${f.n>1?"s":""} · click the facility row again to close</span></div>`;
+  html+="<div class='reg-wrap'><table class='reg-table'><tbody><tr><th>Pollutant</th><th>Conc mg/L</th><th>Flow m³/d</th><th>Load kg/yr</th><th>Tox-wt kg-eq/yr</th><th>Limit</th><th>Status</th></tr>";
+  f.rows.forEach(r=>{
+    html+=`<tr class="${r.ex?"over":""}"><td>${r.pol}</td><td class="${r.ex?"flag":""}">${fmt(r.conc,2)}${r.ex?" ▲":""}</td><td>${fmt(r.flow)}</td>`
+      +`<td>${fmt(r.load,1)}</td><td>${fmt(r.tw,1)}</td><td>${r.limit?fmt(r.limit,2):"—"}</td>`
+      +`<td>${r.ex?"Exceedance":(r.limit?"Within limit":"No limit set")}</td></tr>`;
+  });
+  html+="</tbody></table></div>";
+  $("facDetail").innerHTML=html;
+}
+function downloadCSV(){
+  if(!reg.length) return setStatus("Nothing to download yet — add facility entries first.",true);
+  const header=["Facility","Pollutant","Conc_mgL","Flow_m3day","Days","Limit_mgL","Load_kgyr","ToxWt_kgeqyr","Status"];
+  const esc=v=>`"${String(v??"").replace(/"/g,'""')}"`;
+  const lines=[header.map(esc).join(",")];
+  reg.forEach(r=>{
+    const load=loadKg(r), tw=twpe(r), status=overLimit(r)?"Exceedance":(r.limit?"Within limit":"No limit set");
+    lines.push([r.fac,r.pol,r.conc,r.flow,r.days,r.limit??"",load.toFixed(2),tw.toFixed(2),status].map(esc).join(","));
+  });
+  const blob=new Blob([lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="gbm-observatory-effluent-facility-results.csv";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  setStatus("CSV downloaded — one row per pollutant entry, matching the facility results above.");
+}
+$("facFilter").addEventListener("input", renderFacTable);
+$("csvBtn").addEventListener("click", downloadCSV);
+function renderReg(){
+  const rows=reg.map((r,i)=>({...r,idx:i,load:loadKg(r),tw:twpe(r)}));
+  rows.sort((a,b)=>{const v=(a[sortKey]>b[sortKey]?1:a[sortKey]<b[sortKey]?-1:0);return v*sortDir;});
+  let html="<tr>"+[["fac","Facility"],["pol","Pollutant"],["conc","Conc mg/L"],["flow","Flow m³/d"],["load","Load kg/yr"],["tw","Tox-wt kg-eq/yr"],["limit","Limit"],["x",""]]
+    .map(([k,l])=>`<th data-k="${k}">${l}${sortKey===k?(sortDir>0?" ▲":" ▼"):""}</th>`).join("")+"</tr>";
+  if(!rows.length) html+="<tr><td colspan='8'>No entries yet — add a facility, paste rows, or load the example data.</td></tr>";
+  rows.forEach(r=>{
+    html+=`<tr class="${overLimit(r)?"over":""}"><td>${r.fac||"—"}</td><td>${r.pol}</td><td class="${overLimit(r)?"flag":""}">${fmt(r.conc,2)}${overLimit(r)?" ▲":""}</td>`
+      +`<td>${fmt(r.flow)}</td><td>${fmt(r.load,1)}</td><td>${fmt(r.tw,1)}</td><td>${r.limit?fmt(r.limit,2):"—"}</td>`
+      +`<td><button data-del="${r.idx}" style="padding:0 6px;font-size:.6rem">✕</button></td></tr>`;
+  });
+  $("regTable").innerHTML=html;
+  $("regTable").querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{
+    const k=th.dataset.k; if(k==="x")return;
+    if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=-1;} renderReg();
+  });
+  $("regTable").querySelectorAll("button[data-del]").forEach(b=>b.onclick=()=>{reg.splice(+b.dataset.del,1);renderReg();updateSummary();});
+  updateSummary();
+  renderFacTable(); renderFacDetail();
+}
+function updateSummary(){
+  const total=reg.reduce((s,r)=>s+loadKg(r),0);
+  $("loadVal").innerHTML=`${fmt(total,0)}<span class="unit"> kg/yr</span>`;
+  $("facVal").textContent=new Set(reg.map(r=>r.fac).filter(Boolean)).size||reg.length;
+}
+function addRow(r){ reg.push(r); }
+function parseBulk(text){
+  let n=0;
+  text.split(/\r?\n/).forEach(line=>{
+    if(!line.trim())return;
+    const c=line.split(/[,;\t]/).map(x=>x.trim());
+    if(c.length<4)return;
+    const conc=parseFloat(c[2]),flow=parseFloat(c[3]);
+    if(isNaN(conc)||isNaN(flow))return; // skips header
+    addRow({fac:c[0],pol:c[1]||"Other",conc,flow,days:c[4]?+c[4]||313:313,limit:c[5]?parseFloat(c[5]):null});
+    n++;
+  });
+  return n;
+}
+$("addBtn").addEventListener("click",()=>{
+  const conc=parseFloat($("conc").value),flow=parseFloat($("flow").value);
+  if(isNaN(conc)||isNaN(flow))return setStatus("Enter both concentration and flow.",true);
+  addRow({fac:$("fName").value,pol:$("pName").value,conc,flow,days:+$("days").value||313,limit:$("limit").value?parseFloat($("limit").value):null});
+  $("conc").value="";$("flow").value="";$("limit").value="";$("fName").value="";
+  renderReg(); setStatus("Entry added.");
+});
+$("bulkBtn").addEventListener("click",()=>{
+  const f=$("csv").files[0];
+  if(f){const r=new FileReader();r.onload=()=>{const n=parseBulk(r.result);renderReg();setStatus(n+" rows loaded.");};r.readAsText(f);}
+  else if($("paste").value.trim()){const n=parseBulk($("paste").value);renderReg();setStatus(n+" rows loaded.");}
+  else setStatus("Paste rows or choose a CSV first.",true);
+});
+$("clearReg").addEventListener("click",()=>{reg=[];renderReg();setStatus("Register cleared.");});
+$("demoBtn").addEventListener("click",()=>{
+  reg=[
+    {fac:"Hazaribagh/Savar tannery cluster",pol:"Chromium (total)",conc:8.5,flow:16000,days:313,limit:2},
+    {fac:"Hazaribagh/Savar tannery cluster",pol:"BOD",conc:1900,flow:16000,days:313,limit:50},
+    {fac:"Hazaribagh/Savar tannery cluster",pol:"Sulfide",conc:45,flow:16000,days:313,limit:1},
+    {fac:"Narayanganj dyeing & textile",pol:"COD",conc:1200,flow:9000,days:313,limit:200},
+    {fac:"Narayanganj dyeing & textile",pol:"Total suspended solids",conc:600,flow:9000,days:313,limit:150},
+    {fac:"Tongi industrial outfall",pol:"Ammonia-N",conc:38,flow:5000,days:313,limit:5},
+    {fac:"Municipal WTP (Pagla)",pol:"BOD",conc:140,flow:60000,days:365,limit:30}
+  ];
+  renderReg(); setStatus("Example data loaded — illustrative values for demonstrating the method, not official measurements. Sort by 'Tox-wt' to see why chromium dominates the ranking.");
+});
+
+async function loadReach(lat,lon,label,panTo=true){
+  setStatus(`Loading ${lat.toFixed(3)}, ${lon.toFixed(3)}…`);
+  if(panTo&&map)map.setView([lat,lon],13);
+  if(marker)map.removeLayer(marker);
+  marker=L.circleMarker([lat,lon],{radius:8,color:"#9A5B2A",weight:3,fillColor:"#fff",fillOpacity:.9}).addTo(map).bindPopup(`<b>${label}</b>`);
+  $("siteInfo").innerHTML=`<b>${label}</b><br><span class="mono">${lat.toFixed(3)}, ${lon.toFixed(3)}</span>`;
+  const f=await fetchFlow(lat,lon);
+  if(f){
+    $("qVal").innerHTML=`${fmt(f.now)}<span class="unit"> m³/s</span>`;
+    const lowish=f.now<(f.min+(f.max-f.min)*0.33);
+    $("qTag").textContent=lowish?"low flow — least dilution":"elevated flow — more dilution";
+    $("qTag").className="delta "+(lowish?"down":"up");
+    const m=new Date().getMonth();
+    const season=(m>=5&&m<=9)?"Monsoon":(m>=11||m<=2)?"Dry":"Transitional";
+    $("seasonVal").textContent=season;
+    $("seasonTag").textContent=season==="Dry"?"worst-case concentration":"diluted";
+  }else{ $("qVal").innerHTML="—<span class='unit'> m³/s</span>"; }
+  $("updatedTag").textContent="updated "+new Date().toLocaleTimeString();
+  setStatus(`Live · ${label} · compare dry-season dates on the map, then build the loading register for facilities here.`);
+  clearInterval(refreshTimer); refreshTimer=setInterval(()=>loadReach(lat,lon,label,false),30*60*1000);
+}
+$("loadBtn").addEventListener("click",()=>{
+  const c=$("customPt").value.trim();
+  if(c){const m=c.split(/[,\s]+/).map(parseFloat);if(m.length>=2&&!isNaN(m[0])&&!isNaN(m[1]))return loadReach(m[0],m[1],"Custom point");return setStatus("Enter lat, lon",true);}
+  const s=$("siteSelect");const [la,lo]=s.value.split(",").map(parseFloat);
+  loadReach(la,lo,s.options[s.selectedIndex].text);
+});
+$("siteSelect").addEventListener("change",e=>{$("customPt").value="";const [la,lo]=e.target.value.split(",").map(parseFloat);loadReach(la,lo,e.target.options[e.target.selectedIndex].text);});
+
+let _inited=false;
+return {
+  init(){ if(_inited)return; _inited=true; initMap(); renderReg(); loadReach(23.78,90.36,"Buriganga · Dhaka (tannery/industrial)"); },
+  invalidate(){ try{ if(map)map.invalidateSize(); }catch(e){} }
+};
+})();
+
+const M_cs = (() => {
+const $ = id => document.getElementById("cs-"+id);
+const setStatus = (msg, err=false) => { const s=$("status"); s.textContent = msg; s.className = err ? "err" : ""; };
+const fmt = (n,d=1) => (n==null||isNaN(n)) ? "—" : n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+const isoDay = d => d.toISOString().slice(0,10);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const distKm = (lat1,lon1,lat2,lon2) => {
+  const R=6371, toRad=x=>x*Math.PI/180;
+  const dLat=toRad(lat2-lat1), dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+};
+let map, tileLayer, marker, cycGroup, refreshTimer;
+let cycRows = []; // {sid,name,season,t(Date),lat,lon,wind,pres}
+
+/* ====================== map & GIBS imagery ====================== */
+function gibsUrl(layer,tms,ext,date){ return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/${tms}/{z}/{y}/{x}.${ext}`; }
+function initMap(){
+  map = L.map("cs-map",{zoomControl:true}).setView([21.9,90.3],8);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {attribution:"Esri World Imagery", maxZoom:18}).addTo(map);
+  cycGroup = L.layerGroup().addTo(map);
+  applyImagery();
+  map.on("click", e => loadPoint(e.latlng.lat, e.latlng.lng, "Probed point", false));
+}
+function applyImagery(){
+  const [layer,tms,ext] = $("layerSel").value.split("|");
+  const date = isoDay(new Date(Date.now() - 3*864e5));
+  if(tileLayer) map.removeLayer(tileLayer);
+  const maxNative = tms.includes("Level12") ? 12 : 9;
+  tileLayer = L.tileLayer(gibsUrl(layer,tms,ext,date), {maxNativeZoom:maxNative, maxZoom:18, attribution:"NASA GIBS"}).addTo(map);
+}
+$("applyImg").addEventListener("click", applyImagery);
+
+/* ====================== IBTrACS cyclone tracks (NOAA ERDDAP, free, no key) ====================== */
+const WIND_BANDS = [
+  {min:64, label:"Cyclone (≥64kt)", color:"#B3422C"},
+  {min:34, label:"Storm (34–63kt)", color:"#C0392B"},
+  {min:0,  label:"Depression (<34kt)", color:"#3E7C4F"}
+];
+function bandFor(wind){ return WIND_BANDS.find(b => (wind??0) >= b.min) || WIND_BANDS[WIND_BANDS.length-1]; }
+async function fetchCyclones(){
+  $("cycList").innerHTML = "<li>Loading storm tracks…</li>";
+  const vars = "sid,name,season,iso_time,latitude,longitude,wmo_wind,wmo_pres";
+  const url = `https://erddap.aoml.noaa.gov/hdb/erddap/tabledap/IBTRACS_last3years.json?${vars}&subbasin=%22BB%22&orderBy(%22sid,iso_time%22)`;
+  try{
+    const r = await fetch(url);
+    if(!r.ok) throw new Error(`ERDDAP ${r.status}`);
+    const j = await r.json();
+    const cols = j.table.columnNames;
+    const idx = name => cols.indexOf(name);
+    cycRows = j.table.rows.map(row => ({
+      sid: row[idx("sid")], name: row[idx("name")], season: row[idx("season")],
+      t: new Date(row[idx("iso_time")]), lat: +row[idx("latitude")], lon: +row[idx("longitude")],
+      wind: row[idx("wmo_wind")]==null ? null : +row[idx("wmo_wind")],
+      pres: row[idx("wmo_pres")]==null ? null : +row[idx("wmo_pres")]
+    })).filter(d => !isNaN(d.lat) && !isNaN(d.lon));
+    renderCyclones();
+    setStatus(`Loaded ${new Set(cycRows.map(d=>d.sid)).size} storm track(s) over the Bay of Bengal (last 3 years).`);
+  }catch(err){
+    $("cycList").innerHTML = "<li>Could not load IBTrACS tracks — network or CORS block. Try again, or check erddap.aoml.noaa.gov directly.</li>";
+    setStatus("Cyclone feed failed: "+err.message, true);
+  }
+}
+function renderCyclones(){
+  cycGroup.clearLayers();
+  const bySid = {};
+  cycRows.forEach(d => (bySid[d.sid] ||= []).push(d));
+  const storms = Object.values(bySid).map(pts => {
+    pts.sort((a,b)=>a.t-b.t);
+    const peak = pts.reduce((m,p)=> (p.wind??0) > (m.wind??0) ? p : m, pts[0]);
+    return {pts, peak, name: pts[0].name || "UNNAMED", season: pts[0].season};
+  }).sort((a,b)=> b.pts[b.pts.length-1].t - a.pts[a.pts.length-1].t);
+  storms.forEach(s => {
+    const band = bandFor(s.peak.wind);
+    const latlngs = s.pts.map(p=>[p.lat,p.lon]);
+    L.polyline(latlngs, {color:band.color, weight:2.5, opacity:.85}).addTo(cycGroup);
+    s.pts.forEach(p => L.circleMarker([p.lat,p.lon], {radius:3, color:band.color, fillColor:band.color, fillOpacity:.9, weight:1})
+      .bindPopup(`<b>${s.name}</b> (${s.season})<br>${p.t.toISOString().slice(0,16).replace("T"," ")} UTC<br>Wind ${p.wind??"—"} kt · Pres ${p.pres??"—"} mb`)
+      .addTo(cycGroup));
+  });
+  $("cycList").innerHTML = storms.length ? storms.map(s => {
+    const band = bandFor(s.peak.wind);
+    const first = s.pts[0].t, last = s.pts[s.pts.length-1].t;
+    return `<li><span class="catchip" style="background:${band.color}">${s.peak.wind??"—"}kt</span>`
+      + `<span>${s.name} · ${s.season} — peak ${band.label}, ${first.toISOString().slice(0,10)} → ${last.toISOString().slice(0,10)}</span></li>`;
+  }).join("") : "<li>No Bay of Bengal storms in the last 3 years matched this query.</li>";
+}
+function nearbyCycloneScore(lat,lon){
+  const now = Date.now(), win = 3*864e5, radiusKm = 150;
+  const hit = cycRows.some(p => Math.abs(now - p.t.getTime()) <= win && distKm(lat,lon,p.lat,p.lon) <= radiusKm);
+  return hit ? 100 : 0;
+}
+
+/* ====================== marine conditions (Open-Meteo Marine, free, no key) ====================== */
+async function fetchMarine(lat,lon){
+  const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}`
+            + `&hourly=wave_height,wave_period,sea_surface_temperature&past_days=1&forecast_days=1&timezone=UTC`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`Open-Meteo Marine API ${r.status}`);
+  const j = await r.json();
+  const h = j.hourly || {};
+  const times = (h.time||[]).map(s=>new Date(s+":00Z"));
+  const now = Date.now();
+  let bi = 0, best = Infinity;
+  times.forEach((t,i)=>{ const d=Math.abs(t.getTime()-now); if(d<best){best=d; bi=i;} });
+  return {
+    wave: h.wave_height ? h.wave_height[bi] : null,
+    period: h.wave_period ? h.wave_period[bi] : null,
+    sst: h.sea_surface_temperature ? h.sea_surface_temperature[bi] : null
+  };
+}
+
+/* ====================== river discharge at mouth (GloFAS via Open-Meteo, free, no key) ====================== */
+async function fetchDischarge(lat,lon){
+  const url = `https://flood-api.open-meteo.com/v1/flood?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}`
+            + `&daily=river_discharge&past_days=92&forecast_days=1&cell_selection=nearest`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`Open-Meteo flood API ${r.status}`);
+  const j = await r.json();
+  const q = (j.daily?.river_discharge || []).filter(v=>v!=null);
+  if(!q.length) return {qNow:null, qMax90:null};
+  return {qNow:q[q.length-1], qMax90:Math.max(...q)};
+}
+
+/* ====================== compound coastal-flood screen ====================== */
+function renderScreen(waveScore, qScore, cycScore){
+  const combined = Math.round((waveScore+qScore+cycScore)/3);
+  let cat="Low", cls="r-low", note="Wave energy, river discharge and cyclone proximity are all quiet at this point.";
+  if(combined>=75){ cat="High"; cls="r-high"; note="Multiple coastal-flood drivers are elevated together at this point — treat as a compound-risk window, not a single-cause event."; }
+  else if(combined>=30){ cat="Moderate"; cls="r-mod"; note="At least one driver is elevated. Check which bar is highest to see whether it's waves, river discharge, or a nearby storm."; }
+  $("riskCat").textContent = `${cat} · ${combined}`;
+  $("riskCat").className = cls;
+  $("riskText").textContent = note;
+  $("staffFill").style.height = combined+"%";
+  $("staffMarker").style.bottom = combined+"%";
+  $("staffMarker").dataset.val = combined;
+  $("dWave").style.width = waveScore+"%"; $("dWaveV").textContent = waveScore;
+  $("dQ").style.width = qScore+"%"; $("dQV").textContent = qScore;
+  $("dCyc").style.width = cycScore+"%"; $("dCycV").textContent = cycScore;
+  $("fcLine").textContent = combined>=75
+    ? "Screening indicator only — combined drivers are elevated. For official warnings use the Bangladesh Meteorological Department and FFWC."
+    : "Screening indicator only — not a storm-surge forecast. For official warnings use the Bangladesh Meteorological Department and FFWC.";
+}
+
+/* ====================== load a point ====================== */
+async function loadPoint(lat,lon,label,panTo=true){
+  setStatus(`Loading ${lat.toFixed(3)}, ${lon.toFixed(3)}…`);
+  if(panTo && map) map.setView([lat,lon],9);
+  if(marker) map.removeLayer(marker);
+  marker = L.circleMarker([lat,lon], {radius:8,color:"#0E6FA8",weight:3,fillColor:"#fff",fillOpacity:.9}).addTo(map).bindPopup(`<b>${label}</b>`);
+  $("siteInfo").innerHTML = `<b>${label}</b><br><span class="mono">${lat.toFixed(3)}, ${lon.toFixed(3)}</span>`;
+  try{
+    const [marine, disc] = await Promise.all([fetchMarine(lat,lon), fetchDischarge(lat,lon)]);
+    $("waveVal").innerHTML = `${fmt(marine.wave,1)}<span class="unit"> m</span>`;
+    $("waveTag").textContent = (marine.wave??0) >= 2 ? "elevated sea state" : "typical";
+    $("waveTag").className = "delta "+((marine.wave??0)>=2 ? "up" : "flat");
+    $("periodVal").innerHTML = `${fmt(marine.period,1)}<span class="unit"> s</span>`;
+    $("sstVal").innerHTML = `${fmt(marine.sst,1)}<span class="unit"> °C</span>`;
+    $("qVal").innerHTML = disc.qNow!=null ? `${fmt(disc.qNow,0)}<span class="unit"> m³/s</span>` : "—<span class='unit'> m³/s</span>";
+    $("qTag").textContent = (disc.qMax90 && disc.qNow!=null && disc.qNow >= disc.qMax90*0.66) ? "near 90-day peak" : "below 90-day peak";
+    $("qTag").className = "delta "+((disc.qMax90 && disc.qNow!=null && disc.qNow >= disc.qMax90*0.66) ? "up" : "flat");
+
+    const waveScore = clamp((marine.wave??0)/3*100, 0, 100);
+    const qScore = disc.qMax90 ? clamp((disc.qNow??0)/disc.qMax90*100, 0, 100) : 0;
+    const cycScore = nearbyCycloneScore(lat,lon);
+    renderScreen(Math.round(waveScore), Math.round(qScore), cycScore);
+  }catch(err){
+    setStatus("Point load failed: "+err.message, true);
+  }
+  $("updatedTag").textContent = "updated "+new Date().toLocaleTimeString();
+  setStatus(`Live · ${label} · combine with the cyclone list above for a full coastal picture.`);
+  clearInterval(refreshTimer); refreshTimer = setInterval(()=>loadPoint(lat,lon,label,false), 30*60*1000);
+}
+
+$("loadBtn").addEventListener("click", ()=>{
+  const c = $("customPt").value.trim();
+  if(c){ const m=c.split(/[,\s]+/).map(parseFloat); if(m.length>=2 && !isNaN(m[0]) && !isNaN(m[1])) return loadPoint(m[0],m[1],"Custom point"); return setStatus("Enter lat, lon", true); }
+  const s = $("siteSelect"); const [la,lo] = s.value.split(",").map(parseFloat);
+  loadPoint(la,lo,s.options[s.selectedIndex].text);
+});
+$("siteSelect").addEventListener("change", e=>{ $("customPt").value=""; const [la,lo]=e.target.value.split(",").map(parseFloat); loadPoint(la,lo,e.target.options[e.target.selectedIndex].text); });
+$("cycBtn").addEventListener("click", fetchCyclones);
+
+let _inited=false;
+return {
+  init(){ if(_inited) return; _inited=true; initMap(); fetchCyclones().then(()=>loadPoint(21.85,90.95,"Meghna estuary mouth · Bhola")); },
+  invalidate(){ try{ if(map) map.invalidateSize(); }catch(e){} }
+};
+})();
+
+const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs };
 function showStation(k){
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active", p.id==="pane-"+k));
   document.querySelectorAll(".tab").forEach(t=>{
@@ -2141,6 +2784,19 @@ showStation("rb");
 if('serviceWorker' in navigator && location.protocol==='https:'){
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
+// PWA install prompt wiring
+let _deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); _deferredPrompt=e;
+  const b=document.getElementById('bdInstallBtn'); if(b) b.style.display='inline-block';
+});
+document.addEventListener('click',e=>{
+  if(e.target&&e.target.id==='bdInstallBtn'&&_deferredPrompt){
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.finally(()=>{_deferredPrompt=null; e.target.style.display='none';});
+  }
+});
+window.addEventListener('appinstalled',()=>{const b=document.getElementById('bdInstallBtn'); if(b) b.style.display='none';});
 </script>
 </body>
 </html>
