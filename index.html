@@ -2615,9 +2615,17 @@ async function fetchCyclones(){
   const vars = "sid,name,season,iso_time,latitude,longitude,wmo_wind,wmo_pres";
   const url = `https://erddap.aoml.noaa.gov/hdb/erddap/tabledap/IBTRACS_last3years.json?${vars}&subbasin=%22BB%22&orderBy(%22sid,iso_time%22)`;
   try{
-    const r = await fetch(url);
-    if(!r.ok) throw new Error(`ERDDAP ${r.status}`);
-    const j = await r.json();
+    let j;
+    try{
+      const r = await fetch(url);
+      if(!r.ok) throw new Error(`ERDDAP ${r.status}`);
+      j = await r.json();
+    }catch(direct){
+      // NOAA's ERDDAP doesn't send browser CORS headers behind its gov WAF — retry via the app's own proxy.
+      const r2 = await fetch(location.origin + "/api/proxy?url=" + encodeURIComponent(url));
+      if(!r2.ok) throw direct;
+      j = await r2.json();
+    }
     const cols = j.table.columnNames;
     const idx = name => cols.indexOf(name);
     cycRows = j.table.rows.map(row => ({
