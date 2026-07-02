@@ -79,6 +79,11 @@
   .cyc-list{list-style:none; padding:6px 12px 10px; font-family:var(--mono); font-size:.68rem; display:flex; flex-direction:column; gap:5px; max-height:280px; overflow:auto}
   .cyc-list li{display:flex; align-items:center; gap:8px; padding:4px 6px; border-radius:4px; border-bottom:1px solid var(--hairline)}
   .cyc-list .catchip{flex:none; width:38px; text-align:center; font-weight:700; border-radius:3px; padding:2px 0; color:#fff; font-size:.6rem}
+
+  .pane-hw{--paper:#EEF3F5;--panel:#FAFCFD;--ink:#1B2E3A;--ink-soft:#54707C;--accent:#3E7C9E;--accent-deep:#2C5A73;
+    --accent2:#6BA3BF;--alert:#B3422C;--hairline:#D3DFE3;--marker:#2C5A73;--driver:#3E7C9E;
+    --fill-top:rgba(107,163,191,.30);--fill-bot:rgba(62,124,158,.28);--up:#B3422C;--down:#3E7C4F}
+  #tab-hw{--tab-bg:#EEF3F5; --tab-ink:#1B2E3A} #tab-hw .tdot{background:#3E7C9E}
   .reg-table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:.68rem}
   .reg-table th,.reg-table td{padding:6px 8px; border-bottom:1px solid var(--hairline); text-align:right; white-space:nowrap}
   .reg-table th:first-child,.reg-table td:first-child,.reg-table th:nth-child(2),.reg-table td:nth-child(2){text-align:left; white-space:normal}
@@ -97,7 +102,7 @@
   .brand{display:flex; align-items:baseline; gap:10px; padding-bottom:12px}
   .brand h1{font-family:var(--disp); font-weight:800; font-size:1.25rem; max-width:760px; letter-spacing:.04em; text-transform:uppercase; line-height:1.2}
   .brand .sub{font-family:var(--mono); font-size:.64rem; color:#9DBCAC; letter-spacing:.12em; text-transform:uppercase}
-  nav.tabs{display:flex; gap:6px; margin-left:auto}
+  nav.tabs{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end; row-gap:4px}
   .tab{font-family:var(--disp); font-weight:700; font-size:1.02rem; letter-spacing:.06em; text-transform:uppercase;
     background:transparent; color:#9DBCAC; border:1px solid transparent; border-bottom:none; border-radius:6px 6px 0 0;
     padding:9px 16px 11px; cursor:pointer; display:flex; align-items:center; gap:8px}
@@ -106,6 +111,14 @@
   .tab:hover{color:#fff}
   .tab.active{color:var(--tab-ink); background:var(--tab-bg); border-color:var(--tab-bg)}
   .tab:focus-visible{outline:2px solid #fff; outline-offset:1px}
+  @media (max-width:1650px){ .tab{font-size:.86rem; padding:8px 10px 10px; gap:6px} .tab small{font-size:.52rem} }
+  @media (max-width:1200px){ .tab small{display:none} }
+  @media (max-width:760px){
+    nav.tabs{display:grid; grid-template-columns:repeat(4,1fr); gap:4px; width:100%; margin-left:0; padding-bottom:6px}
+    .tab{font-size:.64rem; letter-spacing:.03em; padding:8px 2px; justify-content:center; border-radius:5px; border-bottom:1px solid transparent}
+    .tab.active{border-color:var(--tab-bg)}
+    .tab .tdot{width:6px;height:6px}
+  }
   #tab-rb{--tab-bg:#ECF1EE; --tab-ink:#14333A} #tab-rb .tdot{background:#1879A0}
   #tab-aq{--tab-bg:#EEF1EC; --tab-ink:#1C3328} #tab-aq .tdot{background:#0E7268}
   #tab-ch{--tab-bg:#F0EDE4; --tab-ink:#2A2517} #tab-ch .tdot{background:#A9742C}
@@ -203,16 +216,64 @@
     <span class="sub">GBM System Observation Focusing Bangladesh. Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)</span>
   </div>
   <nav class="tabs" role="tablist" aria-label="Stations">
+    <button class="tab" id="tab-hw" role="tab" aria-selected="false"><span class="tdot"></span>Headwater <small>snowmelt &amp; upstream</small></button>
     <button class="tab" id="tab-rb" role="tab" aria-selected="false"><span class="tdot"></span>Riverbank <small>erosion & flow</small></button>
     <button class="tab" id="tab-aq" role="tab" aria-selected="false"><span class="tdot"></span>Aquifer <small>groundwater</small></button>
     <button class="tab" id="tab-ch" role="tab" aria-selected="false"><span class="tdot"></span>Charland <small>silt & land change</small></button>
-    <button class="tab" id="tab-ix" role="tab" aria-selected="false"><span class="tdot"></span>Confluence <small>interactions</small></button>
-    <button class="tab" id="tab-bd" role="tab" aria-selected="false"><span class="tdot"></span>Bridge <small>institutional data</small></button>
     <button class="tab" id="tab-ef" role="tab" aria-selected="false"><span class="tdot"></span>Effluent <small>water quality &amp; loads</small></button>
     <button class="tab" id="tab-cs" role="tab" aria-selected="false"><span class="tdot"></span>Coastal <small>estuary &amp; cyclones</small></button>
+    <button class="tab" id="tab-ix" role="tab" aria-selected="false"><span class="tdot"></span>Confluence <small>interactions</small></button>
+    <button class="tab" id="tab-bd" role="tab" aria-selected="false"><span class="tdot"></span>Bridge <small>institutional data</small></button>
   </nav>
+  <button id="glossaryBtn" title="Glossary of terms and acronyms used in this app" style="margin-left:8px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#2E5266;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">📖 Glossary</button>
+  <button id="alertsBtn" title="Get notified when any station's risk gauge turns High" style="margin-left:8px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#4A4A4A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">🔔 Alerts: off</button>
+  <button id="briefsBtn" title="Generate a plain-English policy brief for any station and situation" style="margin-left:8px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#6B4F8C;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">📋 Policy brief</button>
   <button id="bdInstallBtn" title="Install GBM Observatory as an app" style="display:none;margin-left:10px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#C8732A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">⬇ Install app</button>
 </header>
+
+<div id="alertBanner" role="alert" style="display:none;position:sticky;top:0;z-index:500;background:#B3422C;color:#fff;font-family:var(--mono);font-size:.78rem;padding:9px 14px;align-items:center;gap:10px;justify-content:space-between">
+  <span id="alertBannerText" style="flex:1"></span>
+  <span style="display:flex;gap:8px;flex:none">
+    <button id="alertBannerGo" style="background:#fff;color:#B3422C;border:none;border-radius:4px;padding:4px 10px;font-weight:700;cursor:pointer;font-family:inherit;font-size:inherit">View</button>
+    <button id="alertBannerClose" style="background:transparent;color:#fff;border:1px solid #fff;border-radius:4px;padding:4px 10px;cursor:pointer;font-family:inherit;font-size:inherit">Dismiss</button>
+  </span>
+</div>
+
+<div id="glossaryModal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(10,15,18,.55)">
+  <div style="max-width:640px;margin:5vh auto;background:#fff;border-radius:10px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;font-family:var(--sans, sans-serif)">
+    <div style="padding:16px 20px;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:12px">
+      <h2 style="margin:0;font-size:1.1rem;flex:1">Glossary</h2>
+      <button id="glossaryClose" style="background:#eee;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;font-weight:700">✕ Close</button>
+    </div>
+    <div style="padding:12px 20px 0"><input type="text" id="glossarySearch" placeholder="Search terms…" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:6px;font-size:.9rem"></div>
+    <div id="glossaryList" style="padding:8px 20px 20px;overflow:auto;flex:1"></div>
+  </div>
+</div>
+
+<div id="briefModal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(10,15,18,.55)">
+  <div style="max-width:760px;margin:4vh auto;background:#fff;border-radius:10px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;font-family:var(--sans, sans-serif)">
+    <div style="padding:16px 20px;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:12px">
+      <h2 style="margin:0;font-size:1.1rem;flex:1">Policy brief generator</h2>
+      <button id="briefClose" style="background:#eee;border:none;border-radius:5px;padding:6px 12px;cursor:pointer;font-weight:700">✕ Close</button>
+    </div>
+    <div style="padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;border-bottom:1px solid #eee">
+      <div style="display:flex;flex-direction:column;gap:4px"><label for="briefModule" style="font-size:.75rem;color:#555;font-weight:700">Module</label>
+        <select id="briefModule" style="padding:7px;border:1px solid #ccc;border-radius:6px"></select></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><label for="briefSituation" style="font-size:.75rem;color:#555;font-weight:700">Situation</label>
+        <select id="briefSituation" style="padding:7px;border:1px solid #ccc;border-radius:6px"></select></div>
+      <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px"><label for="briefArea" style="font-size:.75rem;color:#555;font-weight:700">Area / reach (optional)</label>
+        <input type="text" id="briefArea" placeholder="e.g. Jamuna at Sirajganj" style="padding:7px;border:1px solid #ccc;border-radius:6px"></div>
+      <button id="briefUseCurrent" style="padding:8px 12px;border:1px solid #6B4F8C;color:#6B4F8C;background:#fff;border-radius:6px;cursor:pointer;font-weight:700">Use current reading</button>
+      <button id="briefGenerate" style="padding:8px 14px;border:none;background:#6B4F8C;color:#fff;border-radius:6px;cursor:pointer;font-weight:700">Generate</button>
+    </div>
+    <textarea id="briefOut" readonly style="flex:1;min-height:320px;margin:12px 20px;padding:12px;border:1px solid #ccc;border-radius:6px;font-family:Georgia,serif;font-size:.92rem;line-height:1.5;resize:vertical" placeholder="Pick a module and situation, then Generate. The brief appears here — copy it into a memo, email or report."></textarea>
+    <div style="padding:0 20px 16px;display:flex;gap:10px">
+      <button id="briefCopy" style="padding:8px 14px;border:1px solid #ccc;background:#f6f6f6;border-radius:6px;cursor:pointer;font-weight:700">Copy to clipboard</button>
+      <button id="briefDownload" style="padding:8px 14px;border:1px solid #ccc;background:#f6f6f6;border-radius:6px;cursor:pointer;font-weight:700">Download (.md)</button>
+      <span id="briefMsg" style="align-self:center;font-size:.8rem;color:#3E7C4F"></span>
+    </div>
+  </div>
+</div>
 
 <div class="pane pane-rb" id="pane-rb">
   <div class="station-bar">
@@ -284,7 +345,7 @@
       <div class="readout">
         <div class="cell"><div class="lbl">Discharge today</div><div class="val" id="rb-qVal">—<span class="unit"> m³/s</span></div><div class="delta flat" id="rb-qDelta">—</div></div>
         <div class="cell"><div class="lbl">7-day change</div><div class="val" id="rb-riseVal">—<span class="unit"> %</span></div></div>
-        <div class="cell"><div class="lbl">Flow vs 90-day peak</div><div class="val" id="rb-pctVal">—<span class="unit"> %</span></div></div>
+        <div class="cell"><div class="lbl" id="rb-pctLbl">Flow vs seasonal baseline</div><div class="val" id="rb-pctVal">—<span class="unit"> %</span></div></div>
         <div class="cell"><div class="lbl">10-day forecast peak</div><div class="val" id="rb-fpkVal">—<span class="unit"> m³/s</span></div><div class="delta flat" id="rb-fpkDelta">—</div></div>
       </div>
     </section>
@@ -317,7 +378,7 @@
 </main>
   <div class="pane-foot">
   DATA · Discharge: GloFAS v4 (Copernicus Emergency Management Service) via the free Open-Meteo Flood API — daily modeled river discharge on a ~5 km grid with a 30-day ensemble forecast, global coverage incl. Bangladesh, India, Nepal. Values are model output, not gauge measurements; for official readings see BWDB/FFWC (Bangladesh) and CWC (India). Imagery: NASA GIBS — Harmonized Landsat–Sentinel (30 m, 2–4 day latency; monsoon cloud causes gaps) and VIIRS (daily, 375 m). Basemap: Esri World Imagery.
-  <br>METHOD · Risk index = 35 % flow magnitude vs 90-day peak + 30 % 7-day rate of rise + 35 % forecast outlook (10-day median peak vs 90-day peak). In the braided Jamuna and lower Meghna, severe bankline retreat also depends on local bank material, char dynamics and channel shifting that no discharge index captures — treat this as a screening tool, and verify banklines with the imagery fade.
+  <br>METHOD · Risk index = 35 % flow magnitude + 30 % 7-day rate of rise + 35 % forecast outlook. Flow magnitude and forecast outlook are ranked as percentiles against a 10-year same-season GloFAS climatology at the same grid cell (±15 days of year, current event excluded) — so "high" means high *for this reach at this time of year*, not merely high within the last 90 days. If the 10-year history can't be fetched, the index falls back to the previous 90-day-peak scaling and says so in the readout. In the braided Jamuna and lower Meghna, severe bankline retreat also depends on local bank material, char dynamics and channel shifting that no discharge index captures — treat this as a screening tool, and verify banklines with the imagery fade.
 </div>
 </div>
 
@@ -582,6 +643,15 @@
         <div style="padding:6px 12px 0; overflow-x:auto"><table class="scorecard" id="ix-scoreTable"><tbody><tr><td>Load a reach to build the scorecard.</td></tr></tbody></table></div>
         <div class="sc-note">Monsoon flow = mean Jun–Sep discharge · Silt work = annual Σ(Q/Q̄)^1.6 · Monsoon recharge = Jun–Sep P−ET₀ · GW crest = Oct–Dec peak deep soil moisture. A year negative across all four columns is the drought triple-signature; strongly positive flow + silt with normal crest is a flood-heavy year.</div>
       </section>
+      <section class="panel">
+        <div class="panel-h">Whole-system interaction chain <span class="tag">Headwater → upstream → this reach → estuary · 3 yrs, best-lag correlations</span></div>
+        <div class="controls" style="padding:8px 12px 0">
+          <button id="ix-chainBtn" class="btn-primary">Trace system chain</button>
+          <span class="tag" id="ix-chainTag">runs 4 extra data fetches along the corridor</span>
+        </div>
+        <div style="padding:6px 12px 0; overflow-x:auto"><table class="scorecard" id="ix-chainTable"><tbody><tr><td>Load a reach above, then trace the chain to quantify how the other stations connect through it.</td></tr></tbody></table></div>
+        <div class="sc-note">Each link is the lag (days) at which the driver series best correlates with the response series over 3 years of z-scored daily values, searched over a physically plausible window. Correlation is not causation — but along a single river, upstream→downstream lags at plausible values (days for flood routing, weeks for melt) are physically meaningful. The last row ties this reach to the Effluent station: the same pollutant load produces higher in-river concentration at low seasonal-percentile flow.</div>
+      </section>
     </div>
     <div class="right-col">
       <section class="panel">
@@ -656,7 +726,7 @@
     </div>
   </main>
   <div class="pane-foot">
-  METHOD · This station computes cross-station analytics from the same free feeds the other stations use, joined at one coordinate. (1) Falling-limb bank-failure index = river fall rate (7-day discharge drop, 25 %/week saturates) × deep-soil saturation percentile, scaled by local coupling strength — a screening implementation of the pore-pressure mechanism by which saturated banks collapse after flood peaks; it is not a geotechnical stability analysis, and ERA5 floodplain soil moisture stands in for a bank piezometer. (2) Recharge lag analyzer = Pearson correlation between discharge and deep soil moisture with the river series shifted 0–60 days; the peak's position estimates how long monsoon water takes to reach the subsurface here, and its height (r) how hydraulically connected river and floodplain aquifer are. (3) Scorecard = per-calendar-year anomalies of monsoon flow, annual silt-transport work, monsoon P−ET₀ and the post-monsoon groundwater crest, for spotting drought triple-signatures and flood-heavy years. Correlation is not causation: irrigation pumping, rainfall driving both series, and model error all share these signals. (4) Numerical models: Muskingum channel routing (Cunge, 1969; Chow, Maidment and Mays, 1988) fitted by grid search with the Nash–Sutcliffe efficiency (Nash and Sutcliffe, 1970), and a single linear-reservoir groundwater store (Chow et al., 1988) fitted to ERA5 deep soil moisture — the two simplest academically standard representations of channel coupling and aquifer memory, chosen for transparency over sophistication.
+  METHOD · This station computes cross-station analytics from the same free feeds the other stations use, joined at one coordinate. (1) Falling-limb bank-failure index = river fall rate (7-day discharge drop, 25 %/week saturates) × deep-soil saturation percentile, scaled by local coupling strength — a screening implementation of the pore-pressure mechanism by which saturated banks collapse after flood peaks; it is not a geotechnical stability analysis, and ERA5 floodplain soil moisture stands in for a bank piezometer. (2) Recharge lag analyzer = Pearson correlation between discharge and deep soil moisture with the river series shifted 0–60 days; the peak's position estimates how long monsoon water takes to reach the subsurface here, and its height (r) how hydraulically connected river and floodplain aquifer are. (3) Scorecard = per-calendar-year anomalies of monsoon flow, annual silt-transport work, monsoon P−ET₀ and the post-monsoon groundwater crest, for spotting drought triple-signatures and flood-heavy years. Correlation is not causation: irrigation pumping, rainfall driving both series, and model error all share these signals. (4) Numerical models: Muskingum channel routing (Cunge, 1969; Chow, Maidment and Mays, 1988) fitted by grid search with the Nash–Sutcliffe efficiency (Nash and Sutcliffe, 1970), and a single linear-reservoir groundwater store (Chow et al., 1988) fitted to ERA5 deep soil moisture — the two simplest academically standard representations of channel coupling and aquifer memory, chosen for transparency over sophistication. (5) Whole-system interaction chain = best-lag Pearson correlations between z-scored 3-year daily series along the corridor the selected reach belongs to (Brahmaputra, Ganges or Meghna): headwater warmth → upstream discharge (0–45 d window, the melt signal), upstream → this reach (0–20 d, flood routing), this reach → the estuary mouth (0–15 d, delivery to the Coastal station), this reach → deep soil moisture (from the recharge lag analyzer), plus a dilution read tying the reach's current seasonal flow percentile to the Effluent station's loading register. Lags pinned at a window edge mean the true lag may lie beyond the searched range; monsoon seasonality drives all series simultaneously and inflates every r, so read the lags comparatively, not as proof of causation.
   </div>
 </div>
 
@@ -920,6 +990,7 @@
           <div class="cell"><div class="lbl">Sea surface temp</div><div class="val" id="cs-sstVal">—<span class="unit"> °C</span></div></div>
           <div class="cell"><div class="lbl">River discharge at mouth</div><div class="val" id="cs-qVal">—<span class="unit"> m³/s</span></div><div class="delta flat" id="cs-qTag">—</div></div>
         </div>
+        <div class="chart-wrap" style="height:180px"><canvas id="cs-trendChart" aria-label="Wave height, last 10 days" role="img"></canvas></div>
       </section>
 
       <section class="panel">
@@ -945,7 +1016,84 @@
   </main>
   <div class="pane-foot">
   DATA · Imagery: NASA GIBS — VIIRS (375 m, daily), MODIS true color (250 m, daily) and Harmonized Landsat–Sentinel (30 m) over the coast and estuary mouth. Marine conditions: Open-Meteo Marine API (ECMWF/GFS wave model) — significant wave height, peak period, sea-surface temperature; global coverage, no key. River discharge: GloFAS v4 (Copernicus) via the free Open-Meteo Flood API, at the coordinate nearest the chosen mouth. Cyclone tracks: NOAA IBTrACS v4 (last 3 years), served by NOAA's public ERDDAP API, filtered to the Bay of Bengal sub-basin — merged best-track data led by IMD New Delhi and other WMO agencies, updated a few times weekly; it is a historical/near-real-time record, not an operational advisory.
-  <br>METHOD · The compound-flood screen combines three 0–100 sub-scores at the chosen point: wave energy (significant wave height scaled against a 3 m reference), river discharge (against the reach's own modeled 90-day maximum), and an active-cyclone proximity flag (any Bay of Bengal track point within ~150 km and 3 days of today, from the list above). The combined score is a simple mean, meant to flag when several coastal-flood drivers line up at once — it is not a validated storm-surge or compound-flood model. For real evacuation or engineering decisions, use official BMD cyclone warnings, FFWC water-level forecasts, and BWDB/CEGIS coastal studies.
+  <br>METHOD · The compound-flood screen combines three 0–100 sub-scores at the chosen point: wave energy (significant wave height scaled against a 3 m open-water reference — a fixed threshold, since long marine climatologies aren't available from this feed), river discharge (percentile rank against a 10-year same-season GloFAS climatology at the same cell, ±15 days of year, current event excluded; falls back to the 90-day maximum if history can't be fetched — the tag under the discharge number says which was used), and an active-cyclone proximity flag (any Bay of Bengal track point within ~150 km and 3 days of today, from the list above). The combined score is a simple mean, meant to flag when several coastal-flood drivers line up at once — it is not a validated storm-surge or compound-flood model. For real evacuation or engineering decisions, use official BMD cyclone warnings, FFWC water-level forecasts, and BWDB/CEGIS coastal studies.
+  </div>
+</div>
+
+<div class="pane pane-hw" id="pane-hw">
+  <div class="station-bar">
+    <div class="controls">
+      <select id="hw-siteSelect" aria-label="Select headwater point">
+        <option value="28.07,95.33" selected>Brahmaputra headwater · Pasighat, Arunachal</option>
+        <option value="26.18,91.74">Brahmaputra · Guwahati, Assam</option>
+        <option value="30.15,78.78">Ganges headwater · Devprayag, Uttarakhand</option>
+        <option value="27.33,88.60">Teesta headwater · Sikkim</option>
+        <option value="24.83,92.78">Barak/Meghna headwater · Silchar, Assam</option>
+      </select>
+      <input type="text" id="hw-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
+      <button id="hw-loadBtn" class="btn-primary">Load point</button>
+    </div>
+    <div id="hw-status">Ready — this station loads when first opened.</div>
+  </div>
+  <main>
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h"><span class="dot" style="background:var(--accent)"></span> Upstream catchment imagery
+          <span class="tag">NASA GIBS · MODIS snow cover default · click map to probe</span>
+        </div>
+        <div class="map-tools">
+          <div class="field">
+            <label for="hw-layerSel">Imagery source</label>
+            <select id="hw-layerSel">
+              <option value="MODIS_Terra_NDSI_Snow_Cover|GoogleMapsCompatible_Level9|png">MODIS snow cover — NDSI (250 m, daily)</option>
+              <option value="VIIRS_SNPP_CorrectedReflectance_TrueColor|GoogleMapsCompatible_Level9|jpg">VIIRS true color (375 m, daily)</option>
+              <option value="MODIS_Terra_CorrectedReflectance_TrueColor|GoogleMapsCompatible_Level9|jpg">MODIS true color (250 m, daily)</option>
+              <option value="HLS_S30_Nadir_BRDF_Adjusted_Reflectance|GoogleMapsCompatible_Level12|png">HLS · Sentinel-2 (30 m)</option>
+            </select>
+          </div>
+          <div class="field"><label>&nbsp;</label><button id="hw-applyImg">Update imagery</button></div>
+        </div>
+        <div id="hw-map" role="application" aria-label="Headwater catchment map" style="height:430px"></div>
+        <div class="forecast-line">Snow cover is a cloud-sensitive daily NDSI product from MODIS/Terra — persistent cloud over the Himalaya can hide real snow extent for days at a time. If a scene looks empty or entirely white/grey, try VIIRS or HLS true color instead, or check back after a clear day.</div>
+      </section>
+    </div>
+
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h"><span class="dot live"></span> Point readout <span class="tag" id="hw-updatedTag">—</span></div>
+        <div class="sitebar" id="hw-siteInfo">No point loaded.</div>
+        <div class="readout">
+          <div class="cell"><div class="lbl">Mean temp, last 7 days</div><div class="val" id="hw-tempVal">—<span class="unit"> °C</span></div><div class="delta flat" id="hw-tempTag">—</div></div>
+          <div class="cell"><div class="lbl">Snowfall, last 30 days</div><div class="val" id="hw-snowVal">—<span class="unit"> cm</span></div></div>
+          <div class="cell"><div class="lbl">Snowfall, prior 30 days</div><div class="val" id="hw-snowPrevVal">—<span class="unit"> cm</span></div></div>
+          <div class="cell"><div class="lbl">Precip, last 30 days</div><div class="val" id="hw-precipVal">—<span class="unit"> mm</span></div></div>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="hw-trendChart" aria-label="Daily mean temperature and snowfall, last 180 days" role="img"></canvas></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Melt-season activity index <span class="tag">heuristic 0–100</span></div>
+        <div class="risk-body">
+          <div class="staff" id="hw-staff" aria-hidden="true">
+            <div class="fill" id="hw-staffFill" style="height:0%"></div>
+            <div class="marker" id="hw-staffMarker" style="bottom:0%" data-val="—"></div>
+          </div>
+          <div class="risk-info">
+            <h3 id="hw-riskCat" class="r-low">—</h3>
+            <p id="hw-riskText">Load a headwater point to combine above-freezing warmth with a drop in recent snowfall accumulation.</p>
+            <div class="drivers">
+              <div class="driver"><span>Above-freezing warmth</span><div class="bar"><i id="hw-dWarm" style="width:0%"></i></div><span id="hw-dWarmV">—</span></div>
+              <div class="driver"><span>Snowfall decline vs. prior month</span><div class="bar"><i id="hw-dSnow" style="width:0%"></i></div><span id="hw-dSnowV">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="forecast-line" id="hw-fcLine">Screening indicator only, built from surface weather — not a snowpack or streamflow model. A rise here is a plausible early signal that Ganges/Brahmaputra flow downstream may increase over the following 1–3 weeks, not a forecast of it.</div>
+      </section>
+    </div>
+  </main>
+  <div class="pane-foot">
+  DATA · Imagery: NASA GIBS — MODIS/Terra NDSI Snow Cover (250 m, daily), with VIIRS true color, MODIS true color and Harmonized Landsat–Sentinel as fallbacks over persistent cloud. Point weather: ERA5-Land reanalysis via the free Open-Meteo Historical Weather API — daily mean/max/min temperature, snowfall sum, precipitation sum; global coverage, no key, roughly a week of latency. Sites are illustrative headwater points along the Brahmaputra, Ganges, Teesta and Barak/Meghna catchments — not gauged monitoring stations.
+  <br>METHOD · The melt-season index averages two 0–100 sub-scores: above-freezing warmth and snowfall decline. Warmth is the current 7-day mean temperature's percentile rank against a 10-year same-season ERA5-Land record at the same point (±15 days of year, current period excluded), gated to zero when the mean is below 0 °C since melt needs above-freezing air; if the 10-year history can't be fetched it falls back to a fixed 15 °C scaling, and the tag under the temperature says which was used. Snowfall decline is the drop from the prior 30-day snowfall total to the most recent 30-day total, as a fraction of the prior total. Both are proxies for melt becoming active, not measurements of actual snowpack loss or meltwater volume — satellites don't measure snow depth directly at this resolution, and reanalysis temperature is a modeled estimate, not a station reading. This station exists to connect a plausible upstream cause to what the Riverbank station observes downstream 1–3 weeks later; it is not a hydrological forecast.
   </div>
 </div>
 <script>
@@ -961,6 +1109,336 @@
     document.addEventListener("DOMContentLoaded",function(){document.body.prepend(b);});
   }
 })();
+
+/* ====================== global: glossary ====================== */
+const GLOSSARY = [
+  ["GloFAS", "Global Flood Awareness System (Copernicus/ECMWF) — a global river-discharge forecast model, the source of the discharge numbers used across several stations."],
+  ["ERA5 / ERA5-Land", "ECMWF's global atmospheric reanalysis — a physics-model reconstruction of past weather, not direct station measurements. ERA5-Land is the higher-resolution land-surface version used for soil moisture, snow and precipitation here."],
+  ["GIBS", "NASA's Global Imagery Browse Services — serves satellite imagery as map tiles, used for every satellite image layer in this app."],
+  ["MODIS", "Moderate Resolution Imaging Spectroradiometer — a NASA instrument on the Terra/Aqua satellites, 250 m–1 km resolution, daily global coverage."],
+  ["VIIRS", "Visible Infrared Imaging Radiometer Suite — a NASA/NOAA instrument on Suomi-NPP, 375 m resolution, daily global coverage."],
+  ["HLS", "Harmonized Landsat–Sentinel — a NASA product combining Landsat and Sentinel-2, 30 m resolution, higher detail but less frequent revisit than MODIS/VIIRS."],
+  ["GRACE / GRACE-FO", "Gravity Recovery and Climate Experiment (and Follow-On) — NASA/German satellites that measure tiny changes in Earth's gravity field, used to estimate total water storage (including groundwater) at a coarse (~300 km) resolution."],
+  ["NDSI", "Normalized Difference Snow Index — the algorithm MODIS/VIIRS snow-cover products use to detect snow from reflectance; sensitive to cloud cover."],
+  ["SWOT", "Surface Water and Ocean Topography — a NASA/CNES satellite that measures water surface elevation in rivers and lakes."],
+  ["TWPE / Tox-wt", "Toxic-Weighted Pounds Equivalent — EPA's method for ranking pollutant loads by relative toxicity, so a kilo of a highly toxic substance counts for more than a kilo of an ordinary one. Used in the Effluent station's loading register."],
+  ["IBTrACS", "International Best Track Archive for Climate Stewardship (NOAA) — the merged historical record of tropical cyclone positions and intensity used by the Coastal station."],
+  ["ECR 2023", "Bangladesh's Environment Conservation Rules 2023, which replaced ECR 1997 — the legal basis for industrial effluent discharge limits, administered by the Department of Environment (DoE)."],
+  ["DoE / BWDB / WARPO / CEGIS / IWM / BIWTA / FFWC", "Bangladeshi government and technical bodies referenced as authoritative sources: Department of Environment, Bangladesh Water Development Board, Water Resources Planning Organization, Center for Environmental and Geographic Information Services, Institute of Water Modelling, Bangladesh Inland Water Transport Authority, Flood Forecasting and Warning Centre."],
+  ["Muskingum routing", "A simplified hydraulic method for estimating how a flood wave changes shape as it travels downstream, used in the Confluence station."],
+  ["NPDES / ICIS / ECHO", "US EPA's permitting and compliance-tracking system for water pollution (National Pollutant Discharge Elimination System, its database ICIS, and its public search tool ECHO) — the design inspiration for this app's Effluent station, though Bangladesh has no equivalent public database to connect to."],
+  ["DEM", "Digital Elevation Model — a raster of ground-surface height, used in erosion and flood-extent reasoning."]
+];
+function renderGlossary(filter=""){
+  const f = filter.trim().toLowerCase();
+  const list = GLOSSARY.filter(([t,d]) => !f || t.toLowerCase().includes(f) || d.toLowerCase().includes(f));
+  const el = document.getElementById("glossaryList");
+  el.innerHTML = list.length ? list.map(([t,d]) =>
+    `<div style="padding:10px 0;border-bottom:1px solid #eee"><b>${t}</b><div style="color:#555;font-size:.88rem;margin-top:3px">${d}</div></div>`
+  ).join("") : "<p style='color:#888'>No matching terms.</p>";
+}
+document.getElementById("glossaryBtn").addEventListener("click", ()=>{
+  document.getElementById("glossaryModal").style.display = "block";
+  renderGlossary(document.getElementById("glossarySearch").value);
+});
+document.getElementById("glossaryClose").addEventListener("click", ()=>{ document.getElementById("glossaryModal").style.display = "none"; });
+document.getElementById("glossaryModal").addEventListener("click", e=>{ if(e.target.id==="glossaryModal") e.target.style.display="none"; });
+document.getElementById("glossarySearch").addEventListener("input", e=>renderGlossary(e.target.value));
+
+/* ====================== global: policy brief generator ====================== */
+const BRIEFS = {
+  hw:{ name:"Headwater / Snowmelt", monitors:"Himalayan headwater conditions — temperature, snowfall and snow-cover imagery — that drive Ganges and Brahmaputra flow into Bangladesh 1–3 weeks later.",
+    basis:"NASA MODIS snow-cover imagery and ERA5-Land reanalysis temperature/snowfall (modeled estimates, ~1 week latency), scored against a 10-year same-season baseline.",
+    agencies:"FFWC (flood outlooks), BWDB (pre-monsoon embankment checks), Ministry of Water Resources; upstream data via JRC (Joint Rivers Commission) channels.",
+    situations:{
+      "Quiet (Low)":{signal:"Headwater temperatures are near or below seasonal norms and snowfall accumulation shows no marked decline — melt is largely inactive.",
+        meaning:"No unusual snowmelt-driven flow increase is signalled for the coming 1–3 weeks from this driver. Rainfall remains the variable to watch.",
+        actions:["No melt-driven action needed; maintain routine FFWC outlook monitoring.","Use this window for scheduled BWDB embankment inspection and repair upstream reaches depend on.","Re-check after any multi-day warm spell in the headwater imagery."]},
+      "Melt starting (Moderate)":{signal:"Either headwater warmth is above seasonal norms or snowfall accumulation has dropped noticeably versus the prior month — early-melt conditions.",
+        meaning:"A gradual rise in Ganges/Brahmaputra inflow over the next 1–3 weeks is plausible. On its own this is normal seasonal behaviour; combined with early monsoon rain it can compound.",
+        actions:["Flag to FFWC desk officers that the upstream melt driver is turning on; cross-check their 10-day outlooks.","Prioritize completion of pre-monsoon embankment works on erosion-prone reaches (BWDB).","Brief district administrations along the Jamuna/Padma that seasonal rise may begin earlier than the calendar suggests."]},
+      "Active melt (High)":{signal:"Headwater temperatures rank high against the 10-year same-season record while snowfall accumulation has fallen sharply — the melt season is active.",
+        meaning:"Sustained upstream flow contribution is likely already in the river system. Where this coincides with monsoon rainfall, peak flows downstream can arrive higher and earlier.",
+        actions:["Treat FFWC forecasts as the operational source and increase their review frequency at the national and district level.","BWDB: move from inspection to readiness on vulnerable embankments and known erosion hotspots (see Riverbank module).","Pre-position erosion-response materials (geobags, boulders) at reaches the Riverbank module flags concurrently.","Note for JRC engagement: upstream reservoir operations compound or moderate this signal."]}}},
+  rb:{ name:"Riverbank / Erosion & Flow", monitors:"River discharge, its rate of rise, and the 30-day forecast at any reach — the main event-driver of bankline erosion — plus before/after satellite imagery of the bankline itself.",
+    basis:"Copernicus GloFAS modeled discharge (~5 km grid) ranked against a 10-year same-season baseline, plus NASA GIBS imagery. Model output, not gauge readings — FFWC/BWDB gauges are authoritative.",
+    agencies:"BWDB (embankments, protection works), FFWC (flood forecasts), district administration/DDM (relocation, relief), CEGIS (erosion prediction studies).",
+    situations:{
+      "Low":{signal:"Discharge sits low-to-mid in its 10-year seasonal range with a quiet forecast.",
+        meaning:"Event-driven bank stress is limited. Slow channel migration continues regardless — erosion in these rivers never fully stops.",
+        actions:["Ideal window for embankment maintenance and bank-protection construction (BWDB).","Update bankline mapping using the module's imagery comparison against last season.","Review resettlement backlog from previous erosion seasons while pressure is off (district administration)."]},
+      "Moderate":{signal:"Discharge is mid-range for the season; localized bank stress is possible where banks are already undercut.",
+        meaning:"Widespread retreat from current conditions alone is unlikely, but weak points fail at moderate flows too.",
+        actions:["Targeted inspection of known weak points: embankment toes, outer bends, freshly cut char edges (BWDB field divisions).","Verify protection-work stockpiles are in place before flows rise further.","Cross-check the Confluence module: if the falling-limb index is also elevated, post-peak collapse risk stacks on top."]},
+      "Elevated":{signal:"Flow is high for the season and/or rising fast, with the forecast keeping it elevated.",
+        meaning:"The river is actively loading its banks. Attack concentrates on outer bends and unprotected reaches; falling stages after this will be the most dangerous window.",
+        actions:["Activate reach-level monitoring on flagged hotspots; daily observation where settlements sit within one bank-height of the edge.","District administration: pre-identify households in the immediate retreat path and confirm shelter/khas-land options.","Hold protection materials at readiness rather than dispatching everywhere — target using this module plus CEGIS predictions."]},
+      "High":{signal:"Discharge at or near the top of its 10-year seasonal range, and/or forecast to peak — prime conditions for rapid bankline retreat.",
+        meaning:"Metres-per-day retreat is possible on vulnerable reaches. Note that in the Jamuna and lower Meghna, heavy erosion also concentrates on the falling limb after this peak passes.",
+        actions:["Emergency footing: continuous monitoring on hotspots, immediate evacuation authority delegated to upazila level where banklines approach dwellings (DDM protocol).","Deploy emergency protection (geobag dumping) only where engineering assessment supports it — mid-flood works often fail.","Document retreat with dated imagery from this module to support later compensation and khas-land allocation claims.","Keep watching after the peak: schedule the Confluence module's falling-limb check for the recession weeks."]}}},
+  aq:{ name:"Aquifer / Groundwater", monitors:"Deep soil moisture, rainfall-minus-evaporation recharge balance, and GRACE total-water-storage imagery — proxies for water-table behaviour in the floodplain.",
+    basis:"ERA5-Land reanalysis and NASA GRACE, seasonally ranked against the multi-year record. Proxies only — they cannot see pumping drawdown in deep aquifers; BWDB Groundwater Circle wells are authoritative.",
+    agencies:"BWDB Groundwater Circle, DPHE (drinking-water wells), Department of Agricultural Extension / BADC (irrigation), WARPO (allocation planning), Barind Multipurpose Development Authority where relevant.",
+    situations:{
+      "Low stress":{signal:"Subsurface wetness is normal-to-wet for the season and the 90-day recharge balance is neutral or positive.",
+        meaning:"Recharge is keeping pace. Shallow wells and dry-season irrigation start from a healthy baseline.",
+        actions:["Routine monitoring; good year to expand the observation-well record (BWDB Groundwater Circle).","Use the favourable balance to advance managed-aquifer-recharge pilots where planned (WARPO/DPHE)."]},
+      "Moderate stress":{signal:"Deep soil is drier than usual for the season or the recharge balance is running negative, with limited rain in the outlook.",
+        meaning:"Water tables are likely declining faster than seasonal norms. Shallow hand tubewells in vulnerable pockets feel this first.",
+        actions:["DPHE: check functionality reports of shallow drinking-water points in historically stressed upazilas.","Agricultural Extension: advise on irrigation scheduling before Boro pumping peaks; flag diesel/electricity demand implications.","Compare with BWDB observation wells to separate weather-driven decline from pumping-driven decline — this module cannot."]},
+      "High stress":{signal:"Deep soil is unusually dry for the season, the 90-day water balance is in strong deficit, and little rain is forecast.",
+        meaning:"Expect falling water tables, shallow tubewells failing first, and compounding stress wherever Boro irrigation is pumping hard. Drinking-water access becomes the immediate welfare issue.",
+        actions:["DPHE: activate contingency for drinking-water points going dry (deepening, temporary supply) in the flagged districts.","Consider temporary pumping guidance in acute pockets (coordination: WARPO, local administration, BADC).","Escalate to Barind Authority where the signal covers the Barind tract — its deep-aquifer decline is chronic and this adds to it.","Log this year in the Confluence module's scorecard: consecutive negative years indicate structural, not seasonal, decline."]}}},
+  ch:{ name:"Charland / Silt & Land Change", monitors:"Silt-transport capacity of the river and year-on-year satellite land/water change — the alluvion–diluvion cycle that creates and destroys char land.",
+    basis:"GloFAS discharge (transport-capacity index) and MODIS imagery classification. Capacity proxy, not measured tonnage; official diara/char surveys govern legal land determinations.",
+    agencies:"District Collector / land offices (alluvion–diluvion records, khas land), CEGIS (char studies), BWDB, Char Development and Settlement Project structures where active.",
+    situations:{
+      "Low transport year":{signal:"Cumulative silt-transport work is running below the multi-year mean; land-change imagery shows limited new deposition.",
+        meaning:"A quiet year for char building. Existing chars are relatively stable; fewer new accretion disputes, but also less new land.",
+        actions:["Good year to update char land records and settle pending accretion cases while boundaries hold still (land offices).","Progress infrastructure on stabilized chars (schools, shelters) with lower near-term reworking risk."]},
+      "Normal":{signal:"Transport capacity is tracking the multi-year mean; the imagery shows the usual mix of accretion and loss.",
+        meaning:"The ordinary alluvion–diluvion churn — some households gain land, others lose it, largely within historical rates.",
+        actions:["Maintain the annual imagery-comparison record from this module as evidence for land-records processes.","Monitor specific chars flagged by residents; the module's two-year comparison can verify claims quickly."]},
+      "High transport year":{signal:"Cumulative silt work is well above the multi-year mean — a flood-heavy, geomorphically active year.",
+        meaning:"Expect above-normal char destruction during the flood and substantial new deposition emerging as waters recede. Boundary disputes and displacement both rise.",
+        actions:["Anticipate a surge in alluvion–diluvion cases; prepare land-office capacity and update khas-land inventories (DC offices).","Coordinate with DDM on char-dweller displacement — char households are typically the first displaced and least recorded.","Commission or update CEGIS char-stability assessment before permitting new settlement on fresh deposits (fresh chars are the least stable).","Compare post-recession imagery in this module (Jan–Mar dates) to map what actually changed."]}}},
+  ef:{ name:"Effluent / Water Quality & Loads", monitors:"Industrial effluent loads computed from entered monitoring data (EPA loading-tool method), ranked by facility and toxicity, plus satellite proxies for turbidity and algal blooms.",
+    basis:"User-entered or DoE/academic monitoring data — this module organizes and ranks it; it does not measure pollution itself. Legal limits: ECR 2023, administered by DoE.",
+    agencies:"Department of Environment (enforcement under ECR 2023), industry associations (CETP compliance), city corporations (municipal loads), DoE clearance committees.",
+    situations:{
+      "No exceedances recorded":{signal:"All entered facility data sits within the permit limits recorded against each pollutant.",
+        meaning:"Within the data entered, compliance holds — but coverage is the question: unmonitored facilities and unmeasured pollutants are invisible here.",
+        actions:["Audit coverage, not compliance: which known dischargers along the reach have no entries? Target sampling there (DoE).","Use the satellite proxy layers to spot visible plumes at facilities with no monitoring data — a plume with no data is itself a finding."]},
+      "Exceedances present":{signal:"One or more facilities show loads or concentrations above their recorded limits; the facility table ranks them by toxic-weighted load.",
+        meaning:"The toxic-weighted ranking identifies where a kilogram of enforcement effort buys the most public-health protection — chromium and heavy-metal exceedances outrank equal-mass BOD exceedances.",
+        actions:["DoE: prioritize inspection/enforcement in toxic-weighted order from the facility table, not first-reported order.","Cross-reference the Confluence module's dilution read: exceedances during low seasonal flow produce disproportionately high in-river concentrations — timing matters for both harm and sampling.","Export the CSV as the evidentiary record accompanying notices; it preserves the computation trail.","Where a CETP serves the cluster, direct findings to its operator and the association jointly."]},
+      "No data loaded":{signal:"The register is empty — no monitoring data has been entered for this area.",
+        meaning:"The module can rank and compute only what it is given. The absence of data is the policy finding: this reach's dischargers are effectively unmonitored in this tool.",
+        actions:["Request existing DoE monitoring records for the reach and enter them — the module immediately ranks them.","Commission baseline sampling at the largest known dischargers; even one round of data makes the ranking meaningful.","Meanwhile use the satellite proxy layers to shortlist where sampling would likely find the most."]}}},
+  cs:{ name:"Coastal / Estuary & Cyclones", monitors:"Wave conditions, sea temperature and river discharge at the estuary mouth, Bay of Bengal cyclone tracks, and a compound coastal-flood screen combining them.",
+    basis:"Open-Meteo marine model, GloFAS discharge (10-year seasonal percentile), NOAA IBTrACS cyclone records. Screening only — BMD cyclone warnings and FFWC forecasts are the operational sources.",
+    agencies:"BMD (cyclone warnings), CPP (Cyclone Preparedness Programme), DDM and coastal district administrations (evacuation, shelters), BWDB (coastal polders).",
+    situations:{
+      "Low":{signal:"Wave energy, river discharge and cyclone proximity are all quiet at the monitored point.",
+        meaning:"No compound coastal-flood drivers are aligned. Baseline coastal risk (polder condition, drainage congestion) remains whatever it structurally is.",
+        actions:["Window for polder embankment and sluice maintenance (BWDB) and shelter upkeep audits (DDM/CPP).","Run drills and update shelter rosters while nothing is imminent — preparedness built now is what functions later."]},
+      "Moderate":{signal:"At least one driver is elevated — check the module's bars to see whether it is waves, river discharge, or a storm in the basin.",
+        meaning:"Single-driver events are usually manageable; the concern is alignment. A high river percentile plus a developing storm is the compound scenario worth pre-empting.",
+        actions:["Increase BMD bulletin review frequency; task CPP volunteers with readiness checks in the relevant coastal upazilas.","If the elevated driver is river discharge, check drainage congestion behind polders — high estuary levels slow gravity drainage."]},
+      "High":{signal:"Multiple coastal-flood drivers are elevated together — a compound-risk window, not a single-cause event.",
+        meaning:"Storm surge, high river flow and waves reinforce each other; historic severe coastal flooding in Bangladesh has typically been compound. BMD's official warnings govern operational response.",
+        actions:["Shift fully to BMD signal-based protocol; this module's role is context, not command.","DDM/district administration: activate shelter readiness and CPP dissemination per the standing orders on disaster.","BWDB: staff vulnerable polder points for breach response; pre-position closure materials.","After the event, use this module's imagery to map inundation extent for relief targeting and polder-damage assessment."]}}},
+  ix:{ name:"Confluence / System Interactions", monitors:"How the modules connect: river–aquifer coupling, the post-peak bank-failure window, year-by-year system scorecard, and the whole-system chain from headwater to estuary.",
+    basis:"Cross-correlations and simple standard models (Muskingum routing, linear-reservoir aquifer) computed live on the same public feeds. Correlation is not causation; monsoon seasonality inflates all signals.",
+    agencies:"WARPO and Ministry of Water Resources (system-level planning), BWDB, FFWC, research partners (IWM, CEGIS, universities).",
+    situations:{
+      "Quiet (Low)":{signal:"The falling-limb bank-failure index is low — the river is not dropping fast, or banks are not saturated, or both.",
+        meaning:"The specific post-peak collapse mechanism is not armed. Other erosion drivers (covered in Riverbank) may still operate.",
+        actions:["Use the calm to run the whole-system chain trace and archive this year's lags — the comparative record is the analytical asset.","Update the annual scorecard reading; check for emerging multi-year drought or flood signatures."]},
+      "Watch (Moderate)":{signal:"The river is beginning to fall from a peak while subsurface saturation remains elevated — the failure window is opening.",
+        meaning:"Saturated banks lose their supporting water pressure as the river drops; the weeks after a peak are historically when large collapse events cluster.",
+        actions:["Alert BWDB field divisions on reaches with strong river–aquifer coupling (high r in this module) — those banks drain slowest.","Advise against restarting heavy works at the waterline until the index subsides."]},
+      "Failure window (High)":{signal:"Rapid river fall coinciding with high bank-zone saturation and strong local coupling — the classic post-peak collapse setup.",
+        meaning:"This is the mechanism behind many of the largest single-day bankline losses in the Jamuna and lower Meghna. It arrives after the flood peak, when public attention has moved on.",
+        actions:["Extend emergency-period monitoring 2–4 weeks past the flood peak on flagged reaches — do not stand down at the peak (BWDB/DDM).","Communicate specifically that receding water is not the all-clear for bankline settlements.","Log the event against this module's 12-month index history to build the local evidence base."]}}},
+  bd:{ name:"Bridge / Institutional Data", monitors:"Comparison of the observatory's model feeds against real measurements pasted in from BWDB, DoE, CEGIS, IWM, DRIP and other institutional sources.",
+    basis:"Whatever institutional data is imported. This module is the observatory's honesty check: it quantifies how far the free model feeds sit from ground truth locally.",
+    agencies:"All data-holding agencies: BWDB, FFWC, DoE, WARPO, CEGIS, IWM, BIWTA, DRIP/Planning Commission.",
+    situations:{
+      "Models and measurements agree":{signal:"Imported gauge or survey data tracks the model feeds within a reasonable band at this location.",
+        meaning:"The observatory's screening indices can be read with more confidence here — the free feeds are locally representative.",
+        actions:["Record the validated reaches; extend the observatory's use for screening decisions there.","Repeat the comparison seasonally — agreement in the dry season does not guarantee agreement at flood peak."]},
+      "Divergence found":{signal:"Imported measurements depart materially from the model feeds — in level, timing, or both.",
+        meaning:"At this location the models mislead in a specific, now-quantified direction. All observatory indices here should be read with that correction in mind — and the divergence itself is useful information for the modelling agencies.",
+        actions:["Apply a mental (or documented) local correction to this reach's indices; do not use raw model values in briefings for this location.","Report the divergence to the data-owning agency and to FFWC/IWM — systematic local bias in GloFAS-type products is exactly what their calibration needs.","Prefer institutional data outright for any consequential decision at this reach."]},
+      "No data imported":{signal:"No institutional data has been loaded for comparison.",
+        meaning:"The observatory is running unvalidated at this location — its indices are plausible but unverified against any local measurement.",
+        actions:["Request even a short gauge record from BWDB/FFWC for the reach of interest; one season of daily data enables the comparison.","Until then, treat all indices at this location as screening-grade and label them so in any onward briefing."]}}}
+};
+const GAUGE_MAP = { hw:"hw-riskCat", rb:"rb-riskCat", aq:"aq-riskCat", ch:"ch-riskCat", ix:"ix-riskCat", cs:"cs-riskCat" };
+function briefFillModules(){
+  const sel=document.getElementById("briefModule");
+  sel.innerHTML=Object.entries(BRIEFS).map(([k,b])=>`<option value="${k}">${b.name}</option>`).join("");
+  briefFillSituations();
+}
+function briefFillSituations(){
+  const b=BRIEFS[document.getElementById("briefModule").value];
+  document.getElementById("briefSituation").innerHTML=Object.keys(b.situations).map(s=>`<option>${s}</option>`).join("");
+}
+function generateBrief(){
+  const k=document.getElementById("briefModule").value;
+  const b=BRIEFS[k];
+  const sit=document.getElementById("briefSituation").value;
+  const s=b.situations[sit];
+  const area=document.getElementById("briefArea").value.trim();
+  const date=new Date().toLocaleDateString(undefined,{year:"numeric",month:"long",day:"numeric"});
+  const lines=[
+    `POLICY BRIEF — GBM OBSERVATORY`,
+    `Module: ${b.name}${area?` · Area: ${area}`:""}`,
+    `Situation: ${sit} · Date: ${date}`,
+    ``,
+    `WHAT THIS MODULE MONITORS`,
+    b.monitors,
+    ``,
+    `CURRENT SIGNAL`,
+    s.signal,
+    ``,
+    `WHAT IT MEANS`,
+    s.meaning,
+    ``,
+    `RECOMMENDED CONSIDERATIONS`,
+    ...s.actions.map((a,i)=>`${i+1}. ${a}`),
+    ``,
+    `RELEVANT AGENCIES`,
+    b.agencies,
+    ``,
+    `DATA BASIS AND LIMITS`,
+    b.basis,
+    ``,
+    `This is a screening brief generated from the GBM Observatory, a public-data monitoring tool. It supports — and never replaces — official forecasts, warnings and determinations by the responsible agencies named above.`
+  ];
+  document.getElementById("briefOut").value=lines.join("\n");
+  document.getElementById("briefMsg").textContent="";
+}
+document.getElementById("briefsBtn").addEventListener("click",()=>{ document.getElementById("briefModal").style.display="block"; if(!document.getElementById("briefModule").options.length) briefFillModules(); });
+document.getElementById("briefClose").addEventListener("click",()=>{ document.getElementById("briefModal").style.display="none"; });
+document.getElementById("briefModal").addEventListener("click",e=>{ if(e.target.id==="briefModal") e.target.style.display="none"; });
+document.getElementById("briefModule").addEventListener("change",briefFillSituations);
+document.getElementById("briefGenerate").addEventListener("click",generateBrief);
+document.getElementById("briefUseCurrent").addEventListener("click",()=>{
+  const k=document.getElementById("briefModule").value;
+  const msg=document.getElementById("briefMsg");
+  const gid=GAUGE_MAP[k];
+  if(!gid){ msg.textContent="This module has no live gauge — pick its situation manually."; return; }
+  const el=document.getElementById(gid);
+  if(!el || el.textContent.trim()==="—"){ msg.textContent="That station hasn't been opened/loaded yet — visit its tab first."; return; }
+  const cls=el.className, sitSel=document.getElementById("briefSituation");
+  const opts=[...sitSel.options].map(o=>o.value);
+  let pick=null;
+  if(cls.includes("r-high")) pick=opts.find(o=>/high|active|failure|exceed/i.test(o))||opts[opts.length-1];
+  else if(cls.includes("r-elev")) pick=opts.find(o=>/elevated/i.test(o))||opts[Math.min(2,opts.length-1)];
+  else if(cls.includes("r-mod")) pick=opts.find(o=>/moderate|watch|starting|normal/i.test(o))||opts[Math.min(1,opts.length-1)];
+  else pick=opts.find(o=>/low|quiet|agree/i.test(o))||opts[0];
+  sitSel.value=pick;
+  msg.textContent=`Set from the live gauge (${el.textContent.trim()}).`;
+  generateBrief();
+});
+document.getElementById("briefCopy").addEventListener("click",async()=>{
+  const t=document.getElementById("briefOut").value;
+  if(!t) return;
+  try{ await navigator.clipboard.writeText(t); document.getElementById("briefMsg").textContent="Copied."; }
+  catch(e){ document.getElementById("briefOut").select(); document.execCommand("copy"); document.getElementById("briefMsg").textContent="Copied (fallback)."; }
+});
+document.getElementById("briefDownload").addEventListener("click",()=>{
+  const t=document.getElementById("briefOut").value;
+  if(!t) return;
+  const k=document.getElementById("briefModule").value;
+  const blob=new Blob([t],{type:"text/markdown;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=`gbm-policy-brief-${k}-${new Date().toISOString().slice(0,10)}.md`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  document.getElementById("briefMsg").textContent="Downloaded.";
+});
+
+/* ====================== global: risk alerts ====================== */
+const RISK_STATIONS = { rb:"Riverbank", aq:"Aquifer", ch:"Charland", ix:"Confluence", cs:"Coastal", hw:"Headwater" };
+let alertsEnabled = localStorage.getItem("gbm-alerts-enabled") === "1";
+const alertSeen = new Map();
+function setAlertsButton(){
+  const b = document.getElementById("alertsBtn");
+  b.textContent = alertsEnabled ? "🔔 Alerts: on" : "🔔 Alerts: off";
+  b.style.background = alertsEnabled ? "#3E7C4F" : "#4A4A4A";
+}
+document.getElementById("alertsBtn").addEventListener("click", async ()=>{
+  if(!alertsEnabled && "Notification" in window && Notification.permission === "default"){
+    try{ await Notification.requestPermission(); }catch(e){}
+  }
+  alertsEnabled = !alertsEnabled;
+  localStorage.setItem("gbm-alerts-enabled", alertsEnabled ? "1" : "0");
+  setAlertsButton();
+});
+setAlertsButton();
+function showAlertBanner(key, text){
+  const banner = document.getElementById("alertBanner");
+  document.getElementById("alertBannerText").textContent = text;
+  banner.style.display = "flex";
+  document.getElementById("alertBannerGo").onclick = ()=>{ showStation(key); banner.style.display="none"; };
+  document.getElementById("alertBannerClose").onclick = ()=>{ banner.style.display="none"; };
+}
+function pollRiskGauges(){
+  if(!alertsEnabled) return;
+  Object.entries(RISK_STATIONS).forEach(([key,label])=>{
+    const el = document.getElementById(key+"-riskCat");
+    if(!el) return;
+    const isHigh = el.classList.contains("r-high");
+    const was = alertSeen.get(key) || false;
+    if(isHigh && !was){
+      const text = `${label} station: risk gauge just turned High (${el.textContent}).`;
+      showAlertBanner(key, text);
+      if("Notification" in window && Notification.permission === "granted"){
+        try{ new Notification("GBM Observatory — "+label, {body:text}); }catch(e){}
+      }
+    }
+    alertSeen.set(key, isHigh);
+  });
+}
+setInterval(pollRiskGauges, 5000);
+
+/* ====================== global: shareable station link ====================== */
+function currentStationFromHash(){
+  const k = location.hash.replace("#","").trim();
+  return (k && document.getElementById("tab-"+k)) ? k : null;
+}
+
+/* ====================== global: seasonal climatology (10-yr same-season percentiles) ====================== */
+const GBM_clim = (() => {
+  const d8 = d => d.toISOString().slice(0,10);
+  const doyUTC = d => Math.floor((Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()) - Date.UTC(d.getUTCFullYear(),0,0))/864e5);
+  const circDist = (a,b) => { const d=Math.abs(a-b); return Math.min(d, 365-d); };
+  // Percentile rank of `value` among historical values falling within ±window days-of-year
+  // of refDate, across all years. The most recent excludeDays are excluded so the current
+  // event does not score against itself. Returns {pct, n} or null if the sample is too thin.
+  function seasonalPercentile(times, values, value, refDate, window=15, excludeDays=120){
+    if(value==null || !times || !times.length) return null;
+    const refDoy = doyUTC(refDate);
+    const cutoff = Date.now() - excludeDays*864e5;
+    const pool = [];
+    for(let i=0;i<times.length;i++){
+      const v = values[i];
+      if(v==null || times[i].getTime() > cutoff) continue;
+      if(circDist(doyUTC(times[i]), refDoy) <= window) pool.push(v);
+    }
+    if(pool.length < 60) return null;
+    let below=0, equal=0;
+    pool.forEach(v=>{ if(v<value) below++; else if(v===value) equal++; });
+    return { pct: Math.round(100*(below + equal/2)/pool.length), n: pool.length };
+  }
+  async function fetchDischargeHistory(lat, lon, years=10){
+    const end = new Date(Date.now() - 7*864e5);
+    const start = new Date(end.getFullYear()-years, end.getMonth(), end.getDate());
+    const url = `https://flood-api.open-meteo.com/v1/flood?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}`
+              + `&daily=river_discharge&start_date=${d8(start)}&end_date=${d8(end)}&cell_selection=nearest`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error(`flood history ${r.status}`);
+    const j = await r.json();
+    return { t: (j.daily?.time||[]).map(s=>new Date(s+"T00:00:00Z")),
+             v: (j.daily?.river_discharge||[]).map(x=>x==null?null:+x) };
+  }
+  async function fetchTempHistory(lat, lon, years=10){
+    const end = new Date(Date.now() - 7*864e5);
+    const start = new Date(end.getFullYear()-years, end.getMonth(), end.getDate());
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}`
+              + `&start_date=${d8(start)}&end_date=${d8(end)}&daily=temperature_2m_mean&timezone=UTC`;
+    const r = await fetch(url);
+    if(!r.ok) throw new Error(`archive history ${r.status}`);
+    const j = await r.json();
+    return { t: (j.daily?.time||[]).map(s=>new Date(s+"T00:00:00Z")),
+             v: (j.daily?.temperature_2m_mean||[]).map(x=>x==null?null:+x) };
+  }
+  return { seasonalPercentile, fetchDischargeHistory, fetchTempHistory };
+})();
+
 const M_rb = (() => {
 const P="rb-";
 
@@ -1033,7 +1511,7 @@ async function fetchDischarge(lat, lon){
 }
 
 /* ====================== risk model (GBM, discharge-based) ====================== */
-function analyse(d){
+function analyse(d, climHist=null){
   const todayIdx = (() => { let i = d.q.length-1; while(i>=0 && d.q[i]==null) i--; return i; })(); // last consolidated value
   const qNow = d.q[todayIdx];
   const past = d.q.slice(0, todayIdx+1).filter(v=>v!=null);
@@ -1048,9 +1526,17 @@ function analyse(d){
   const fc10 = fc.slice(0,10);
   const fcPeak = fc10.length ? fc10.reduce((a,b)=> b.v>a.v ? b : a) : null;
 
-  const flowFactor = clamp(qNow / qMax90, 0, 1);
+  // Preferred: rank current flow and forecast peak against a 10-year same-season
+  // climatology (like the Aquifer station already does). Fallback: 90-day max.
+  const refDate = d.t[todayIdx] || new Date();
+  const pNow  = climHist ? GBM_clim.seasonalPercentile(climHist.t, climHist.v, qNow, refDate) : null;
+  const pPeak = (climHist && fcPeak) ? GBM_clim.seasonalPercentile(climHist.t, climHist.v, fcPeak.v, fcPeak.t) : null;
+  const climMode = !!pNow;
+
+  const flowFactor = climMode ? pNow.pct/100 : clamp(qNow / qMax90, 0, 1);
   const riseFactor = clamp(((qNow / Math.max(q7ago,1)) - 1) / 0.5, 0, 1);      // +50 %/week saturates
-  const fcFactor   = fcPeak ? clamp(fcPeak.v / qMax90, 0, 1) : flowFactor;
+  const fcFactor   = climMode ? (pPeak ? pPeak.pct/100 : flowFactor)
+                              : (fcPeak ? clamp(fcPeak.v / qMax90, 0, 1) : flowFactor);
   const idx = Math.round(100 * clamp(0.35*flowFactor + 0.30*riseFactor + 0.35*fcFactor, 0, 1));
 
   let cat="Low", cls="r-low",
@@ -1058,7 +1544,7 @@ function analyse(d){
   if(idx>=75){cat="High";cls="r-high";note="Flow at or near the seasonal peak and/or forecast to peak — prime conditions for rapid bankline retreat on outer bends, char margins and unprotected reaches. Erosion in the Jamuna and lower Meghna typically concentrates on the falling limb too.";}
   else if(idx>=55){cat="Elevated";cls="r-elev";note="High or rising flow is loading the banks; the GloFAS outlook keeps discharge elevated. Watch embankment toes, outer bends and freshly cut char edges.";}
   else if(idx>=30){cat="Moderate";cls="r-mod";note="Mid-range conditions. Localized slumping is possible where banks are already undercut; widespread retreat from this event alone is unlikely.";}
-  return {idx, cat, cls, note, flowFactor, riseFactor, fcFactor, qNow, q7ago, qMax90, todayIdx, fc, fcPeak};
+  return {idx, cat, cls, note, flowFactor, riseFactor, fcFactor, qNow, q7ago, qMax90, todayIdx, fc, fcPeak, climMode, pNow};
 }
 
 /* ====================== rendering ====================== */
@@ -1114,8 +1600,11 @@ function renderRisk(a){
 async function loadReach(lat, lon, label, panTo=true){
   setStatus(`Fetching GloFAS discharge for ${lat.toFixed(3)}, ${lon.toFixed(3)}…`);
   try{
-    const d = await fetchDischarge(lat, lon);
-    const a = analyse(d);
+    const [d, climHist] = await Promise.all([
+      fetchDischarge(lat, lon),
+      GBM_clim.fetchDischargeHistory(lat, lon).catch(()=>null)
+    ]);
+    const a = analyse(d, climHist);
     currentPt = {lat, lon, label};
     $("siteInfo").innerHTML = `<b>${label}</b><br><span class="mono">GloFAS cell ${(d.snapLat??lat).toFixed(3)}, ${(d.snapLon??lon).toFixed(3)} · ~5 km grid · daily</span>`;
     $("qVal").innerHTML = `${fmt(a.qNow)}<span class="unit"> m³/s</span>`;
@@ -1124,6 +1613,8 @@ async function loadReach(lat, lon, label, panTo=true){
     $("qDelta").className = "delta " + (wk>2?"up":wk<-2?"down":"flat");
     $("riseVal").innerHTML = `${wk>0?"+":""}${fmt(wk,1)}<span class="unit"> %</span>`;
     $("pctVal").innerHTML = `${fmt(100*a.flowFactor)}<span class="unit"> %</span>`;
+    const pctLbl = document.getElementById("rb-pctLbl");
+    if(pctLbl) pctLbl.textContent = a.climMode ? `Flow percentile vs 10-yr season (n=${a.pNow.n})` : "Flow vs 90-day peak (10-yr baseline unavailable)";
     if(a.fcPeak){
       $("fpkVal").innerHTML = `${fmt(a.fcPeak.v)}<span class="unit"> m³/s</span>`;
       const chg = 100*(a.fcPeak.v-a.qNow)/a.qNow;
@@ -1763,7 +2254,7 @@ const setStatus=(m,e=false)=>{const s=$("status");s.textContent=m;s.className=e?
 const fmt=(n,d=0)=>(n==null||isNaN(n))?"—":n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 let chartO=null, chartL=null, chartF=null, refreshTimer=null;
-let lastD=null, lastA=null, chartM=null, chartR=null;
+let lastD=null, lastA=null, lastPt=null, chartM=null, chartR=null;
 
 async function fetchJoint(lat,lon){
   const d8=d=>d.toISOString().slice(0,10);
@@ -1954,7 +2445,7 @@ async function loadJoint(lat,lon,label,panTo=true){
     renderCharts(d,a);
     renderStaff(a);
     renderScore(a);
-    lastD=d; lastA=a;
+    lastD=d; lastA=a; lastPt={lat,lon,label};
     const limb=a.chg7!=null&&a.chg7<-5?"on the falling limb":a.chg7!=null&&a.chg7>5?"on the rising limb":"steady";
     $("fcLine").innerHTML=`Interaction read: river ${limb}; monsoon water reaches the deep subsurface here in about <b>${fmt(a.peakLag)} days</b> with coupling r=<b>${a.peakR!=null?a.peakR.toFixed(2):"—"}</b>. ${a.peakR!=null&&a.peakR<0.35?"Weak coupling can mean thick clay cover or heavy pumping decoupling river and aquifer — compare with the Aquifer station.":"Strong coupling means flood season is also recharge season at this reach."}`;
     $("updatedTag").textContent="updated "+new Date().toLocaleTimeString();
@@ -2069,6 +2560,93 @@ $("resBtn").addEventListener("click",()=>{
     $("resOut").innerHTML=`Best fit: groundwater memory <b>k ≈ ${best.k} days</b> at r = <b>${best.r.toFixed(2)}</b>. Reading: rain that falls here remains hydrologically "alive" in the subsurface for roughly ${best.k<35?"a month — a fast, sandy, river-coupled floodplain":best.k<80?"one to three months — typical Bengal alluvium, carrying the monsoon into the early dry season":"several months — slow, clay-buffered storage (or pumping-distorted dynamics; compare with the Aquifer station)"}. This single constant is the rain-to-aquifer coupling of Part II, expressed as one number.`;
     setStatus("Linear reservoir fitted — the simplest academically standard aquifer model, run live on this reach.");
   }catch(e){ setStatus("Reservoir fit failed: "+e.message,true); }
+});
+
+/* ---------- whole-system interaction chain (Headwater → upstream → reach → estuary + Effluent dilution) ---------- */
+const CORRIDORS = {
+  meghna:      { hw:[24.83,92.78,"Barak headwater · Silchar"],      up:[24.05,90.98,"Meghna · Bhairab Bazar"], est:[21.85,90.95,"Meghna mouth · Bhola"] },
+  ganges:      { hw:[30.15,78.78,"Ganges headwater · Devprayag"],   up:[24.80,87.93,"Ganges · Farakka"],       est:[21.85,90.95,"Meghna mouth · Bhola"] },
+  brahmaputra: { hw:[28.07,95.33,"Brahmaputra headwater · Pasighat"], up:[25.18,89.67,"Jamuna · Bahadurabad"],  est:[21.85,90.95,"Meghna mouth · Bhola"] }
+};
+function corridorFor(label){
+  const l=(label||"").toLowerCase();
+  if(l.includes("meghna")||l.includes("bhairab")||l.includes("chandpur")) return ["Meghna corridor", CORRIDORS.meghna];
+  if(l.includes("ganges")||l.includes("padma")||l.includes("hardinge")||l.includes("goalundo")||l.includes("mawa")||l.includes("farakka")) return ["Ganges corridor", CORRIDORS.ganges];
+  return ["Brahmaputra corridor", CORRIDORS.brahmaputra];
+}
+async function chainFetchQ(lat,lon){
+  const d8=d=>d.toISOString().slice(0,10);
+  const end=new Date(Date.now()-2*864e5), start=new Date(end.getFullYear()-3, end.getMonth(), end.getDate());
+  const u=`https://flood-api.open-meteo.com/v1/flood?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&daily=river_discharge&start_date=${d8(start)}&end_date=${d8(end)}&cell_selection=nearest`;
+  const r=await fetch(u); if(!r.ok) throw new Error("flood API "+r.status);
+  const j=await r.json();
+  return { t:(j.daily?.time||[]), v:(j.daily?.river_discharge||[]).map(x=>x==null?null:+x) };
+}
+async function chainFetchT(lat,lon){
+  const d8=d=>d.toISOString().slice(0,10);
+  const end=new Date(Date.now()-6*864e5), start=new Date(end.getFullYear()-3, end.getMonth(), end.getDate());
+  const u=`https://archive-api.open-meteo.com/v1/archive?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&start_date=${d8(start)}&end_date=${d8(end)}&daily=temperature_2m_mean&timezone=UTC`;
+  const r=await fetch(u); if(!r.ok) throw new Error("archive API "+r.status);
+  const j=await r.json();
+  return { t:(j.daily?.time||[]), v:(j.daily?.temperature_2m_mean||[]).map(x=>x==null?null:+x) };
+}
+function alignByDate(a,b){
+  const map=new Map(); a.t.forEach((s,i)=>map.set(s, a.v[i]));
+  const va=[], vb=[];
+  b.t.forEach((s,i)=>{ if(map.has(s)){ va.push(map.get(s)); vb.push(b.v[i]); } });
+  return [va, vb];
+}
+function bestLag(driver, response, maxLag){        // driver leads response
+  const zd=zscore(driver), zr=zscore(response);
+  let best={lag:null, r:null};
+  for(let L=0; L<=maxLag; L++){
+    const r=corrAtLag(zd, zr, L);
+    if(r!=null && (best.r==null || Math.abs(r)>Math.abs(best.r))) best={lag:L, r};
+  }
+  return best;
+}
+function strengthWord(r){
+  if(r==null) return "insufficient data";
+  const a=Math.abs(r);
+  return a>=0.7 ? "strong" : a>=0.4 ? "moderate" : a>=0.2 ? "weak" : "negligible";
+}
+$("chainBtn").addEventListener("click", async ()=>{
+  if(!lastPt) return setStatus("Load a reach first (top of this station), then trace the chain.", true);
+  const [corrName, C] = corridorFor(lastPt.label);
+  setStatus(`Tracing ${corrName}: headwater → ${C.up[2]} → this reach → estuary…`);
+  $("chainTable").innerHTML = "<tr><td>Fetching four corridor series (3 years each)…</td></tr>";
+  try{
+    const [hwT, upQ, reachQ, estQ, climHist] = await Promise.all([
+      chainFetchT(C.hw[0], C.hw[1]),
+      chainFetchQ(C.up[0], C.up[1]),
+      chainFetchQ(lastPt.lat, lastPt.lon),
+      chainFetchQ(C.est[0], C.est[1]),
+      GBM_clim.fetchDischargeHistory(lastPt.lat, lastPt.lon).catch(()=>null)
+    ]);
+    const links = [];
+    { const [d,r]=alignByDate(hwT, upQ);    links.push({ from:`Headwater warmth (${C.hw[2]})`, to:`Upstream flow (${C.up[2]})`, ...bestLag(d,r,45), max:45, module:"Headwater → Riverbank" }); }
+    { const [d,r]=alignByDate(upQ, reachQ); links.push({ from:`Upstream flow (${C.up[2]})`, to:`This reach (${lastPt.label})`, ...bestLag(d,r,20), max:20, module:"Riverbank routing" }); }
+    { const [d,r]=alignByDate(reachQ, estQ);links.push({ from:`This reach`, to:`Estuary mouth (${C.est[2]})`, ...bestLag(d,r,15), max:15, module:"Riverbank → Coastal" }); }
+    if(lastA && lastA.peakR!=null && lastA.peakLag!=null)
+      links.push({ from:"This reach flow", to:"Deep soil moisture (bank zone)", lag:lastA.peakLag, r:lastA.peakR, max:60, module:"Riverbank → Aquifer" });
+
+    let rows = "<tr><th>Link (module ⇄ module)</th><th>Driver → response</th><th>Best lag</th><th>r</th><th>Strength</th></tr>";
+    links.forEach(L=>{
+      rows += `<tr><td>${L.module}</td><td>${L.from} → ${L.to}</td>`
+            + `<td>${L.lag==null?"—":L.lag+" d"}${L.lag===L.max?" (at window edge)":""}</td>`
+            + `<td>${L.r==null?"—":L.r.toFixed(2)}</td><td>${strengthWord(L.r)}</td></tr>`;
+    });
+    const qLast = reachQ.v.filter(v=>v!=null).slice(-1)[0];
+    const pQ = climHist ? GBM_clim.seasonalPercentile(climHist.t, climHist.v, qLast, new Date()) : null;
+    const dil = pQ==null ? "seasonal percentile unavailable — dilution read skipped"
+      : `flow at the <b>${pQ.pct}th percentile</b> for the season — effluent dilution capacity ${pQ.pct>=67?"above":pQ.pct>=33?"near":"below"} normal; the same discharged load means ${pQ.pct<33?"<b>higher</b>":pQ.pct>=67?"lower":"typical"} in-river concentrations right now`;
+    rows += `<tr><td>Riverbank → Effluent</td><td colspan="4">Dilution: ${dil}.</td></tr>`;
+    $("chainTable").innerHTML = rows;
+    setStatus(`${corrName} traced — ${links.filter(l=>l.r!=null).length} of ${links.length} links had enough overlapping data.`);
+  }catch(e){
+    $("chainTable").innerHTML = "<tr><td>Chain trace failed: "+e.message+"</td></tr>";
+    setStatus("Chain trace failed: "+e.message, true);
+  }
 });
 
 let _inited=false;
@@ -2674,7 +3252,7 @@ function nearbyCycloneScore(lat,lon){
 /* ====================== marine conditions (Open-Meteo Marine, free, no key) ====================== */
 async function fetchMarine(lat,lon){
   const url = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}`
-            + `&hourly=wave_height,wave_period,sea_surface_temperature&past_days=1&forecast_days=1&timezone=UTC`;
+            + `&hourly=wave_height,wave_period,sea_surface_temperature&past_days=10&forecast_days=1&timezone=UTC`;
   const r = await fetch(url);
   if(!r.ok) throw new Error(`Open-Meteo Marine API ${r.status}`);
   const j = await r.json();
@@ -2686,7 +3264,8 @@ async function fetchMarine(lat,lon){
   return {
     wave: h.wave_height ? h.wave_height[bi] : null,
     period: h.wave_period ? h.wave_period[bi] : null,
-    sst: h.sea_surface_temperature ? h.sea_surface_temperature[bi] : null
+    sst: h.sea_surface_temperature ? h.sea_surface_temperature[bi] : null,
+    hist: { t: times, wave: h.wave_height||[] }
   };
 }
 
@@ -2697,9 +3276,26 @@ async function fetchDischarge(lat,lon){
   const r = await fetch(url);
   if(!r.ok) throw new Error(`Open-Meteo flood API ${r.status}`);
   const j = await r.json();
+  const times = (j.daily?.time||[]).map(s=>new Date(s+"T00:00:00Z"));
   const q = (j.daily?.river_discharge || []).filter(v=>v!=null);
-  if(!q.length) return {qNow:null, qMax90:null};
-  return {qNow:q[q.length-1], qMax90:Math.max(...q)};
+  if(!q.length) return {qNow:null, qMax90:null, hist:{t:[],q:[]}};
+  return {qNow:q[q.length-1], qMax90:Math.max(...q), hist:{t:times, q:j.daily.river_discharge}};
+}
+
+let trendChart=null;
+function renderTrend(marineHist){
+  const labels = marineHist.t.map(d=>d.toISOString().slice(5,16).replace("T"," "));
+  if(trendChart) trendChart.destroy();
+  trendChart = new Chart($("trendChart"), {
+    type:"line",
+    data:{ labels, datasets:[
+      {label:"Wave height (m)", data:marineHist.wave, borderColor:"#0E6FA8", backgroundColor:"rgba(14,111,168,.12)", fill:true, tension:.25, pointRadius:0}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      scales:{ x:{ ticks:{ maxTicksLimit:6, font:{size:9} } }, y:{ title:{display:true,text:"m"} } },
+      plugins:{ legend:{ display:false } }
+    }
+  });
 }
 
 /* ====================== compound coastal-flood screen ====================== */
@@ -2730,20 +3326,30 @@ async function loadPoint(lat,lon,label,panTo=true){
   marker = L.circleMarker([lat,lon], {radius:8,color:"#0E6FA8",weight:3,fillColor:"#fff",fillOpacity:.9}).addTo(map).bindPopup(`<b>${label}</b>`);
   $("siteInfo").innerHTML = `<b>${label}</b><br><span class="mono">${lat.toFixed(3)}, ${lon.toFixed(3)}</span>`;
   try{
-    const [marine, disc] = await Promise.all([fetchMarine(lat,lon), fetchDischarge(lat,lon)]);
+    const [marine, disc, climHist] = await Promise.all([
+      fetchMarine(lat,lon), fetchDischarge(lat,lon),
+      GBM_clim.fetchDischargeHistory(lat,lon).catch(()=>null)
+    ]);
     $("waveVal").innerHTML = `${fmt(marine.wave,1)}<span class="unit"> m</span>`;
     $("waveTag").textContent = (marine.wave??0) >= 2 ? "elevated sea state" : "typical";
     $("waveTag").className = "delta "+((marine.wave??0)>=2 ? "up" : "flat");
     $("periodVal").innerHTML = `${fmt(marine.period,1)}<span class="unit"> s</span>`;
     $("sstVal").innerHTML = `${fmt(marine.sst,1)}<span class="unit"> °C</span>`;
     $("qVal").innerHTML = disc.qNow!=null ? `${fmt(disc.qNow,0)}<span class="unit"> m³/s</span>` : "—<span class='unit'> m³/s</span>";
-    $("qTag").textContent = (disc.qMax90 && disc.qNow!=null && disc.qNow >= disc.qMax90*0.66) ? "near 90-day peak" : "below 90-day peak";
-    $("qTag").className = "delta "+((disc.qMax90 && disc.qNow!=null && disc.qNow >= disc.qMax90*0.66) ? "up" : "flat");
+    const pQ = climHist ? GBM_clim.seasonalPercentile(climHist.t, climHist.v, disc.qNow, new Date()) : null;
+    if(pQ){
+      $("qTag").textContent = `${pQ.pct}th pctile vs 10-yr season`;
+      $("qTag").className = "delta "+(pQ.pct>=80 ? "up" : "flat");
+    }else{
+      $("qTag").textContent = (disc.qMax90 && disc.qNow!=null && disc.qNow >= disc.qMax90*0.66) ? "near 90-day peak" : "below 90-day peak";
+      $("qTag").className = "delta "+((disc.qMax90 && disc.qNow!=null && disc.qNow >= disc.qMax90*0.66) ? "up" : "flat");
+    }
 
     const waveScore = clamp((marine.wave??0)/3*100, 0, 100);
-    const qScore = disc.qMax90 ? clamp((disc.qNow??0)/disc.qMax90*100, 0, 100) : 0;
+    const qScore = pQ ? pQ.pct : (disc.qMax90 ? clamp((disc.qNow??0)/disc.qMax90*100, 0, 100) : 0);
     const cycScore = nearbyCycloneScore(lat,lon);
     renderScreen(Math.round(waveScore), Math.round(qScore), cycScore);
+    renderTrend(marine.hist);
   }catch(err){
     setStatus("Point load failed: "+err.message, true);
   }
@@ -2768,7 +3374,143 @@ return {
 };
 })();
 
-const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs };
+const M_hw = (() => {
+const $ = id => document.getElementById("hw-"+id);
+const setStatus = (msg, err=false) => { const s=$("status"); s.textContent = msg; s.className = err ? "err" : ""; };
+const fmt = (n,d=1) => (n==null||isNaN(n)) ? "—" : n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+const isoDay = d => d.toISOString().slice(0,10);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+let map, tileLayer, marker, trendChart, refreshTimer;
+
+/* ====================== map & GIBS imagery ====================== */
+function gibsUrl(layer,tms,ext,date){ return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/${layer}/default/${date}/${tms}/{z}/{y}/{x}.${ext}`; }
+function initMap(){
+  map = L.map("hw-map",{zoomControl:true}).setView([27.5,92.5],6);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {attribution:"Esri World Imagery", maxZoom:18}).addTo(map);
+  applyImagery();
+  map.on("click", e => loadPoint(e.latlng.lat, e.latlng.lng, "Probed point", false));
+}
+function applyImagery(){
+  const [layer,tms,ext] = $("layerSel").value.split("|");
+  const date = isoDay(new Date(Date.now() - 3*864e5));
+  if(tileLayer) map.removeLayer(tileLayer);
+  const maxNative = tms.includes("Level12") ? 12 : 9;
+  tileLayer = L.tileLayer(gibsUrl(layer,tms,ext,date), {maxNativeZoom:maxNative, maxZoom:18, attribution:"NASA GIBS"}).addTo(map);
+}
+$("applyImg").addEventListener("click", applyImagery);
+
+/* ====================== point weather (ERA5-Land via Open-Meteo, free, no key) ====================== */
+async function fetchWeather(lat,lon){
+  const end = new Date(Date.now() - 6*864e5); // reanalysis latency
+  const start = new Date(end.getTime() - 180*864e5);
+  const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}`
+            + `&start_date=${isoDay(start)}&end_date=${isoDay(end)}`
+            + `&daily=temperature_2m_mean,temperature_2m_max,temperature_2m_min,snowfall_sum,precipitation_sum&timezone=UTC`;
+  const r = await fetch(url);
+  if(!r.ok) throw new Error(`archive API ${r.status}`);
+  const j = await r.json();
+  const d = j.daily || {};
+  const t = (d.time||[]).map(s=>new Date(s+"T00:00:00Z"));
+  const grab = k => (d[k]||[]).map(v=>v==null?null:+v);
+  return { t, tmean:grab("temperature_2m_mean"), tmax:grab("temperature_2m_max"), tmin:grab("temperature_2m_min"),
+    snow:grab("snowfall_sum"), precip:grab("precipitation_sum") };
+}
+function sumLast(arr,n,offset=0){ const s=arr.slice(Math.max(0,arr.length-n-offset), arr.length-offset); const v=s.filter(x=>x!=null); return v.length? v.reduce((a,b)=>a+b,0) : null; }
+function meanLast(arr,n){ const s=arr.slice(Math.max(0,arr.length-n)).filter(x=>x!=null); return s.length? s.reduce((a,b)=>a+b,0)/s.length : null; }
+
+/* ====================== trend chart ====================== */
+function renderTrend(w){
+  const labels = w.t.map(d=>d.toISOString().slice(5,10));
+  if(trendChart) trendChart.destroy();
+  trendChart = new Chart($("trendChart"), {
+    type:"line",
+    data:{ labels, datasets:[
+      {label:"Mean temp (°C)", data:w.tmean, borderColor:"#B3422C", backgroundColor:"transparent", yAxisID:"y", tension:.2, pointRadius:0},
+      {label:"Snowfall (cm/day)", data:w.snow, borderColor:"#3E7C9E", backgroundColor:"rgba(62,124,158,.15)", yAxisID:"y2", fill:true, tension:.2, pointRadius:0}
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      scales:{ x:{ ticks:{ maxTicksLimit:8, font:{size:9} } },
+        y:{ position:"left", title:{display:true,text:"°C"} },
+        y2:{ position:"right", title:{display:true,text:"cm"}, grid:{drawOnChartArea:false} } },
+      plugins:{ legend:{ labels:{ boxWidth:10, font:{size:10} } } }
+    }
+  });
+}
+
+/* ====================== melt-season activity index ====================== */
+function renderScreen(warmScore, snowScore){
+  const combined = Math.round((warmScore+snowScore)/2);
+  let cat="Low", cls="r-low", note="Temperatures near or below freezing and no clear drop in snowfall accumulation — melt likely inactive.";
+  if(combined>=75){ cat="High"; cls="r-high"; note="Warm 7-day temperatures and a marked drop in snowfall vs. the prior month together suggest active melt — watch Riverbank discharge over the following 1–3 weeks."; }
+  else if(combined>=30){ cat="Moderate"; cls="r-mod"; note="At least one melt driver is elevated. Check which bar is higher — warmth or the snowfall decline."; }
+  $("riskCat").textContent = `${cat} · ${combined}`;
+  $("riskCat").className = cls;
+  $("riskText").textContent = note;
+  $("staffFill").style.height = combined+"%";
+  $("staffMarker").style.bottom = combined+"%";
+  $("staffMarker").dataset.val = combined;
+  $("dWarm").style.width = warmScore+"%"; $("dWarmV").textContent = warmScore;
+  $("dSnow").style.width = snowScore+"%"; $("dSnowV").textContent = snowScore;
+}
+
+/* ====================== load a point ====================== */
+async function loadPoint(lat,lon,label,panTo=true){
+  setStatus(`Loading ${lat.toFixed(3)}, ${lon.toFixed(3)}…`);
+  if(panTo && map) map.setView([lat,lon],7);
+  if(marker) map.removeLayer(marker);
+  marker = L.circleMarker([lat,lon], {radius:8,color:"#3E7C9E",weight:3,fillColor:"#fff",fillOpacity:.9}).addTo(map).bindPopup(`<b>${label}</b>`);
+  $("siteInfo").innerHTML = `<b>${label}</b><br><span class="mono">${lat.toFixed(3)}, ${lon.toFixed(3)}</span>`;
+  try{
+    const [w, climT] = await Promise.all([
+      fetchWeather(lat,lon),
+      GBM_clim.fetchTempHistory(lat,lon).catch(()=>null)
+    ]);
+    if(!w.t.length || w.tmean.every(v=>v==null)) throw new Error("no land weather data here — try a nearby point");
+    const tempNow = meanLast(w.tmean,7);
+    const snowNow = sumLast(w.snow,30,0);
+    const snowPrev = sumLast(w.snow,30,30);
+    const precipNow = sumLast(w.precip,30,0);
+    const pT = climT ? GBM_clim.seasonalPercentile(climT.t, climT.v, tempNow, new Date()) : null;
+    $("tempVal").innerHTML = `${fmt(tempNow,1)}<span class="unit"> °C</span>`;
+    $("tempTag").textContent = pT ? `${pT.pct}th pctile vs 10-yr season` : ((tempNow??-99) > 0 ? "above freezing" : "at/below freezing");
+    $("tempTag").className = "delta "+(pT ? (pT.pct>=80 ? "up" : "flat") : ((tempNow??-99) > 0 ? "up" : "flat"));
+    $("snowVal").innerHTML = `${fmt((snowNow??0)/10,1)}<span class="unit"> cm</span>`;
+    $("snowPrevVal").innerHTML = `${fmt((snowPrev??0)/10,1)}<span class="unit"> cm</span>`;
+    $("precipVal").innerHTML = `${fmt(precipNow,0)}<span class="unit"> mm</span>`;
+
+    // Warmth: percentile vs 10-yr same-season temps where possible, else fixed scaling.
+    // Melt still needs above-freezing air, so the percentile is gated to zero below 0 °C.
+    let warmScore;
+    if(pT){ warmScore = (tempNow!=null && tempNow > 0) ? pT.pct : 0; }
+    else  { warmScore = clamp(((tempNow??-15)+5)/20*100, 0, 100); }
+    const decline = (snowPrev && snowPrev>0) ? clamp((snowPrev-(snowNow??0))/snowPrev*100, 0, 100) : 0;
+    renderScreen(Math.round(warmScore), Math.round(decline));
+    renderTrend(w);
+  }catch(err){
+    setStatus("Point load failed: "+err.message, true);
+  }
+  $("updatedTag").textContent = "updated "+new Date().toLocaleTimeString();
+  setStatus(`Live · ${label} · ERA5-Land reanalysis, ~6-day latency.`);
+  clearInterval(refreshTimer); refreshTimer = setInterval(()=>loadPoint(lat,lon,label,false), 60*60*1000);
+}
+
+$("loadBtn").addEventListener("click", ()=>{
+  const c = $("customPt").value.trim();
+  if(c){ const m=c.split(/[,\s]+/).map(parseFloat); if(m.length>=2 && !isNaN(m[0]) && !isNaN(m[1])) return loadPoint(m[0],m[1],"Custom point"); return setStatus("Enter lat, lon", true); }
+  const s = $("siteSelect"); const [la,lo] = s.value.split(",").map(parseFloat);
+  loadPoint(la,lo,s.options[s.selectedIndex].text);
+});
+$("siteSelect").addEventListener("change", e=>{ $("customPt").value=""; const [la,lo]=e.target.value.split(",").map(parseFloat); loadPoint(la,lo,e.target.options[e.target.selectedIndex].text); });
+
+let _inited=false;
+return {
+  init(){ if(_inited) return; _inited=true; initMap(); loadPoint(28.07,95.33,"Brahmaputra headwater · Pasighat, Arunachal"); },
+  invalidate(){ try{ if(map) map.invalidateSize(); }catch(e){} }
+};
+})();
+
+const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs, hw: M_hw };
 function showStation(k){
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active", p.id==="pane-"+k));
   document.querySelectorAll(".tab").forEach(t=>{
@@ -2776,6 +3518,7 @@ function showStation(k){
     t.classList.toggle("active", on);
     t.setAttribute("aria-selected", on?"true":"false");
   });
+  if(history.replaceState) history.replaceState(null,"","#"+k); else location.hash=k;
   const m = STATIONS[k];
   setTimeout(()=>{
     try{ m.init(); }catch(err){ console.error("Station init failed:", err);
@@ -2785,7 +3528,7 @@ function showStation(k){
   }, 30);
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>showStation(t.id.slice(4))));
-showStation("rb");
+showStation(currentStationFromHash() || "rb");
 
 </script>
 <script>
