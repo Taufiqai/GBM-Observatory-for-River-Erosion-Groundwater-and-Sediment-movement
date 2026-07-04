@@ -4,7 +4,7 @@
 
 Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)
 
-Five stations in one self-contained web app — no build step, no server code, no API keys:
+Nine stations in one self-contained web app — no build step, no API keys, one optional serverless proxy:
 
 | Station | What it does | Data |
 |---|---|---|
