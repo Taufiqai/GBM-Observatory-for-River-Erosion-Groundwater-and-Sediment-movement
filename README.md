@@ -4,7 +4,7 @@
 
 Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)
 
-Nine stations in one self-contained web app — no build step, no API keys, one optional serverless proxy:
+Five stations in one self-contained web app — no build step, no server code, no API keys:
 
 | Station | What it does | Data |
 |---|---|---|
@@ -31,7 +31,7 @@ Nine stations in one self-contained web app — no build step, no API keys, one 
 3. **Automatic updates.** Every `git push` to `main` redeploys automatically. Edits to `index.html` are the only thing ever needed.
 4. **Custom domain (optional).** Project → Settings → Domains; Vercel issues HTTPS automatically. HTTPS matters: the service worker and "install app" features only activate on HTTPS (Vercel provides it by default).
 
-Nothing else is required — there are no environment variables and no secrets. Almost every data source is a free public API called directly from the visitor's browser. One exception: NOAA's IBTrACS server (used by the Coastal station for cyclone tracks) doesn't send browser CORS headers, so a single small serverless function, `api/proxy.js`, passes that one request through server-side. Vercel picks it up automatically — no configuration needed — and it does nothing except forward a GET request to a public URL and return the response.
+Nothing else is required — there are no environment variables, no secrets, and no backend, because all data sources are free public APIs called directly from the visitor's browser.
 
 ## Mobile app (PWA — included and ready)
 
