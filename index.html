@@ -886,12 +886,12 @@
   <div class="station-bar">
     <div class="controls">
       <select id="hw-siteSelect" aria-label="Select headwater catchment">
-        <option value="30.15,78.60">Ganges headwater · Devprayag, Uttarakhand</option>
-        <option value="31.10,78.90">Upper Bhagirathi · Gangotri approach</option>
-        <option value="29.47,94.34">Yarlung Tsangpo · Nuxia, Tibet</option>
-        <option value="28.07,95.33">Brahmaputra · Pasighat, Arunachal</option>
-        <option value="27.35,88.61">Teesta headwater · North Sikkim</option>
-        <option value="25.03,93.02">Barak (Meghna source) · Manipur hills</option>
+        <option value="29.95,78.16|30.99,78.94">Ganges · Haridwar gate (snow: Gangotri catchment)</option>
+        <option value="30.15,78.60|30.99,78.94">Ganges · Devprayag confluence (snow: Gangotri)</option>
+        <option value="28.06,95.33|29.60,94.90">Brahmaputra · Pasighat, Arunachal (snow: E. Himalaya)</option>
+        <option value="29.47,94.34|30.20,93.50">Yarlung Tsangpo · Nuxia, Tibet (snow: plateau)</option>
+        <option value="26.90,88.47|27.70,88.55">Teesta · Sevoke gate (snow: North Sikkim)</option>
+        <option value="24.82,92.80|25.20,93.30">Barak (Meghna source) · Silchar (hills: Manipur)</option>
       </select>
       <input type="text" id="hw-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
       <button id="hw-loadBtn" class="btn-primary">Load catchment</button>
@@ -2702,6 +2702,20 @@ const GX = (() => {
             + `&daily=wave_height_max&past_days=31&forecast_days=7&timezone=UTC`;
     try { return await j(u); } catch(e){ return null; }
   }
+  // GloFAS cells are a grid; a point in a steep valley or off-channel returns a dry cell.
+  // flowBest probes neighbours and locks onto the strongest channel within ~10-20 km.
+  async function flowBest(lat,lon,wide){
+    lat=+lat; lon=+lon;
+    const score = f => meanN(f.q) || 0;
+    const first = await flow(lat,lon);
+    if(score(first) >= 50) return Object.assign(first,{at:[lat,lon],moved:false});
+    const R = wide ? [0.05,0.1,0.2] : [0.05,0.1];
+    const offs=[]; R.forEach(r=>offs.push([r,0],[-r,0],[0,r],[0,-r]));
+    const cands = await Promise.allSettled(offs.map(([dy,dx])=>flow(lat+dy,lon+dx).then(f=>({f,at:[lat+dy,lon+dx]}))));
+    let best={f:first,at:[lat,lon]};
+    cands.forEach(c=>{ if(c.status==="fulfilled" && score(c.value.f)>score(best.f)) best=c.value; });
+    return Object.assign(best.f,{at:best.at,moved: best.at[0]!==lat||best.at[1]!==lon});
+  }
   function trendPct(q,split){
     const past = q.slice(Math.max(0,split-7),split).filter(v=>v!=null);
     const next = q.slice(split,split+7).filter(v=>v!=null);
@@ -2716,7 +2730,7 @@ const GX = (() => {
     if(sel && /^-?\d/.test(sel.value)){ const [a,b]=sel.value.split(","); return {lat:+a,lon:+b,label:sel.options[sel.selectedIndex].text}; }
     return fallback;
   }
-  return {d8,num,mean,sum,sumN,meanN,maxN,clean,flow,hist,fc16,marine,trendPct,parsePt};
+  return {d8,num,mean,sum,sumN,meanN,maxN,clean,flow,flowBest,hist,fc16,marine,trendPct,parsePt};
 })();
 
 /* ---------- Policy Engine: rule-based bilingual analysis ---------- */
@@ -2924,13 +2938,13 @@ const M_hw = (() => {
   const setStatus = (m,e=false)=>{const s=$("status"); s.textContent=m; s.className=e?"err":"";};
   let chart=null, lastM=null, lastLabel=null, lang="en";
   function stat(l,v,s){return `<div class="gxstat"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s||""}</div></div>`;}
-  async function load(lat,lon,label){
-    setStatus("Loading headwater catchment — ERA5-Land snow/temperature + GloFAS flows …");
+  async function load(rlat,rlon,slat,slon,label){
+    setStatus("Loading headwater catchment — locating river channel cell + ERA5-Land snow/temperature …");
     try{
       const [fr,hr,fcr] = await Promise.allSettled([
-        GX.flow(lat,lon),
-        GX.hist(lat,lon,90,"snowfall_sum,temperature_2m_mean,precipitation_sum"),
-        GX.fc16(lat,lon,"temperature_2m_mean,snowfall_sum,precipitation_sum")
+        GX.flowBest(rlat,rlon,false),
+        GX.hist(slat,slon,90,"snowfall_sum,temperature_2m_mean,precipitation_sum"),
+        GX.fc16(slat,slon,"temperature_2m_mean,snowfall_sum,precipitation_sum")
       ]);
       if(fr.status!=="fulfilled") throw fr.reason;
       const f = fr.value;
@@ -2953,8 +2967,8 @@ const M_hw = (() => {
         stat("Discharge now", GX.num(m.qNow)+" m³/s","GloFAS nearest cell")+
         stat("7-day flow outlook",(m.trendPct==null?"—":(m.trendPct>=0?"+":"")+GX.num(m.trendPct,0)+"%"),"vs last 7 days")+
         stat("31-day peak", GX.num(m.qFcMax)+" m³/s","forecast maximum")+
-        stat("Snow · 30 d", GX.num(m.snow30,1)+" cm","ERA5-Land")+
-        stat("Mean temp · 7 d", GX.num(m.temp7,1)+" °C", m.temp7>1?"melt active":"melt paused");
+        stat("Snow · 30 d", GX.num(m.snow30,1)+" cm","high catchment · ERA5-Land")+
+        stat("Mean temp · 7 d", GX.num(m.temp7,1)+" °C", m.temp7>1?"high catchment · melt active":"high catchment · melt paused");
       // chart: discharge history solid, forecast dashed; rain bars
       const labels = f.t, qh = f.q.map((v,i)=>i< f.split?v:null), qf = f.q.map((v,i)=>i>=f.split-1?v:null);
       const rmap = {}; (h.daily?.time||[]).forEach((d,i)=>rmap[d]=rain[i]);
@@ -2972,10 +2986,19 @@ const M_hw = (() => {
           y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"mm/day",font:{size:9}},ticks:{font:{size:9}}}}}});
       $("fcline").innerHTML = `<b>Predictive read:</b> weekly mean discharge ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"}; 31-day peak ≈ <b>${GX.num(m.qFcMax)} m³/s</b>. Downstream arrival at Bahadurabad/Hardinge: <b>5–10 days</b>.`;
       PolicyEngine.render($("policy"),"headwater",label,m,lang);
-      setStatus(`Loaded ${label}. Dashed segment = GloFAS 31-day forecast; bars = daily precipitation (history + 16-day outlook).`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load catchment" to retry.`:""), missing.length>0);
+      const cellNote = f.moved ? ` River cell auto-located at ${f.at[0].toFixed(2)}, ${f.at[1].toFixed(2)} — the strongest GloFAS channel near this site.` : "";
+      setStatus(`Loaded ${label}.${cellNote} Dashed segment = GloFAS 31-day forecast; bars = daily precipitation (history + 16-day outlook).`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load catchment" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this catchment: "+err.message, true); }
   }
-  function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:30.15,lon:78.60,label:"Devprayag"}); load(p.lat,p.lon,p.label); }
+  function reload(){
+    const c=($("customPt").value||"").trim();
+    const mm=c.match(/^(-?\d+(?:\.\d+)?)[,\s]+(-?\d+(?:\.\d+)?)$/);
+    if(mm){ load(+mm[1],+mm[2],+mm[1],+mm[2],"Custom "+(+mm[1]).toFixed(2)+", "+(+mm[2]).toFixed(2)); return; }
+    const sel=$("siteSelect");
+    const [river,snow]=sel.value.split("|");
+    const [ra,rb2]=river.split(","), [sa,sb]=(snow||river).split(",");
+    load(+ra,+rb2,+sa,+sb,sel.options[sel.selectedIndex].text);
+  }
   let _inited=false;
   return { init(){ if(_inited)return; _inited=true;
       $("loadBtn").addEventListener("click",reload);
@@ -2995,7 +3018,7 @@ const M_mo = (() => {
     setStatus("Loading monsoon point — ERA5-Land rainfall + 16-day outlook + GloFAS response …");
     try{
       const [fr,hr,fcr] = await Promise.allSettled([
-        GX.flow(lat,lon),
+        GX.flowBest(lat,lon,true),
         GX.hist(lat,lon,120,"precipitation_sum"),
         GX.fc16(lat,lon,"precipitation_sum")
       ]);
@@ -3043,7 +3066,8 @@ const M_mo = (() => {
           y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"m³/s",font:{size:9}},ticks:{font:{size:9}}}}}});
       $("fcline").innerHTML = `<b>Predictive read:</b> ${GX.num(m.rainFc16,0)} mm more rain expected within 16 days; river response ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"} week-on-week. Pulse index <b>${m.pulse==null?"—":m.pulse+"/100"}</b>.`;
       PolicyEngine.render($("policy"),"monsoon",label,m,lang);
-      setStatus(`Loaded ${label}. Solid bars = observed rain (ERA5-Land, ~6-day latency); pale bars = 16-day forecast; dashed line = GloFAS 31-day flow forecast.`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load point" to retry.`:""), missing.length>0);
+      const cellNote = f.moved ? ` River response measured at the strongest GloFAS channel cell nearby (${f.at[0].toFixed(2)}, ${f.at[1].toFixed(2)}).` : "";
+      setStatus(`Loaded ${label}.${cellNote} Solid bars = observed rain (ERA5-Land, ~6-day latency); pale bars = 16-day forecast; dashed line = GloFAS 31-day flow forecast.`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load point" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this point: "+err.message, true); }
   }
   function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:23.85,lon:90.26,label:"Savar · Dhaka"}); load(p.lat,p.lon,p.label); }
@@ -3155,7 +3179,7 @@ const GXPolicyDock = (() => {
           const sel = document.querySelector("#pane-"+k+" select");
           let lat=DEFAULTS[k][0], lon=DEFAULTS[k][1], label=DEFAULTS[k][2];
           if(sel && /^-?\d/.test(sel.value)){ const [a,b]=sel.value.split(","); lat=+a; lon=+b; label=sel.options[sel.selectedIndex].text; }
-          const [fr2,hr2] = await Promise.allSettled([ GX.flow(lat,lon), GX.hist(lat,lon,30,"precipitation_sum") ]);
+          const [fr2,hr2] = await Promise.allSettled([ GX.flowBest(lat,lon,true), GX.hist(lat,lon,30,"precipitation_sum") ]);
           if(fr2.status!=="fulfilled") throw fr2.reason;
           const f = fr2.value;
           const rain = GX.clean(hr2.status==="fulfilled" ? hr2.value.daily?.precipitation_sum : []);
