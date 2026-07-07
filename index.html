@@ -2659,7 +2659,21 @@ const GX = (() => {
   const sum  = a => a.reduce((x,y)=>x+y,0);
   const clean = a => (a||[]).map(v=>v==null?null:+v);
 
-  async function j(url){ const r = await fetch(url); if(!r.ok) throw new Error("API "+r.status); return r.json(); }
+  async function j(url){
+    for(let a=0;a<2;a++){
+      try{
+        const ctl = ("AbortController" in window) ? new AbortController() : null;
+        const to = ctl ? setTimeout(()=>ctl.abort(), 15000) : null;
+        const r = await fetch(url, ctl?{signal:ctl.signal}:undefined);
+        if(to) clearTimeout(to);
+        if(!r.ok) throw new Error("API "+r.status);
+        return await r.json();
+      }catch(e){ if(a===1) throw (e.name==="AbortError"?new Error("timed out after 15 s"):e); }
+    }
+  }
+  const sumN = a => { const f=(a||[]).filter(v=>v!=null); return f.length? f.reduce((x,y)=>x+y,0) : null; };
+  const meanN = a => { const f=(a||[]).filter(v=>v!=null); return f.length? f.reduce((x,y)=>x+y,0)/f.length : null; };
+  const maxN = a => { const f=(a||[]).filter(v=>v!=null); return f.length? Math.max(...f) : null; };
 
   // GloFAS: 92 days history + 31 days forecast in one continuous daily series
   async function flow(lat,lon){
@@ -2702,7 +2716,7 @@ const GX = (() => {
     if(sel && /^-?\d/.test(sel.value)){ const [a,b]=sel.value.split(","); return {lat:+a,lon:+b,label:sel.options[sel.selectedIndex].text}; }
     return fallback;
   }
-  return {d8,num,mean,sum,clean,flow,hist,fc16,marine,trendPct,parsePt};
+  return {d8,num,mean,sum,sumN,meanN,maxN,clean,flow,hist,fc16,marine,trendPct,parsePt};
 })();
 
 /* ---------- Policy Engine: rule-based bilingual analysis ---------- */
@@ -2913,19 +2927,26 @@ const M_hw = (() => {
   async function load(lat,lon,label){
     setStatus("Loading headwater catchment — ERA5-Land snow/temperature + GloFAS flows …");
     try{
-      const [f,h,fc] = await Promise.all([
+      const [fr,hr,fcr] = await Promise.allSettled([
         GX.flow(lat,lon),
         GX.hist(lat,lon,90,"snowfall_sum,temperature_2m_mean,precipitation_sum"),
         GX.fc16(lat,lon,"temperature_2m_mean,snowfall_sum,precipitation_sum")
       ]);
+      if(fr.status!=="fulfilled") throw fr.reason;
+      const f = fr.value;
+      const h = hr.status==="fulfilled" ? hr.value : {daily:{}};
+      const fc = fcr.status==="fulfilled" ? fcr.value : {daily:{}};
+      const missing = [];
+      if(hr.status!=="fulfilled") missing.push("ERA5-Land history (snow/rain/temp)");
+      if(fcr.status!=="fulfilled") missing.push("16-day outlook");
       const snow = GX.clean(h.daily?.snowfall_sum), temp = GX.clean(h.daily?.temperature_2m_mean), rain = GX.clean(h.daily?.precipitation_sum);
       const m = {
-        qNow: f.q[f.split-1], qFcMax: Math.max(...f.q.slice(f.split).filter(v=>v!=null)),
+        qNow: f.q[f.split-1], qFcMax: GX.maxN(f.q.slice(f.split)),
         trendPct: GX.trendPct(f.q,f.split),
-        snow30: GX.sum(snow.slice(-30).filter(v=>v!=null)),
-        rain30: GX.sum(rain.slice(-30).filter(v=>v!=null)),
-        rain7: GX.sum(rain.slice(-7).filter(v=>v!=null)),
-        temp7: GX.mean(temp.slice(-7).filter(v=>v!=null))
+        snow30: GX.sumN(snow.slice(-30)),
+        rain30: GX.sumN(rain.slice(-30)),
+        rain7: GX.sumN(rain.slice(-7)),
+        temp7: GX.meanN(temp.slice(-7))
       };
       lastM=m; lastLabel=label;
       $("stats").innerHTML =
@@ -2951,7 +2972,7 @@ const M_hw = (() => {
           y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"mm/day",font:{size:9}},ticks:{font:{size:9}}}}}});
       $("fcline").innerHTML = `<b>Predictive read:</b> weekly mean discharge ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"}; 31-day peak ≈ <b>${GX.num(m.qFcMax)} m³/s</b>. Downstream arrival at Bahadurabad/Hardinge: <b>5–10 days</b>.`;
       PolicyEngine.render($("policy"),"headwater",label,m,lang);
-      setStatus(`Loaded ${label}. Dashed segment = GloFAS 31-day forecast; bars = daily precipitation (history + 16-day outlook).`);
+      setStatus(`Loaded ${label}. Dashed segment = GloFAS 31-day forecast; bars = daily precipitation (history + 16-day outlook).`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load catchment" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this catchment: "+err.message, true); }
   }
   function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:30.15,lon:78.60,label:"Devprayag"}); load(p.lat,p.lon,p.label); }
@@ -2973,27 +2994,32 @@ const M_mo = (() => {
   async function load(lat,lon,label){
     setStatus("Loading monsoon point — ERA5-Land rainfall + 16-day outlook + GloFAS response …");
     try{
-      const [f,h,fc] = await Promise.all([
+      const [fr,hr,fcr] = await Promise.allSettled([
         GX.flow(lat,lon),
         GX.hist(lat,lon,120,"precipitation_sum"),
         GX.fc16(lat,lon,"precipitation_sum")
       ]);
+      if(fr.status!=="fulfilled") throw fr.reason;
+      const f = fr.value;
+      const h = hr.status==="fulfilled" ? hr.value : {daily:{}};
+      const fc = fcr.status==="fulfilled" ? fcr.value : {daily:{}};
+      const missing = [];
+      if(hr.status!=="fulfilled") missing.push("ERA5-Land rainfall history");
+      if(fcr.status!=="fulfilled") missing.push("16-day rain outlook");
       const rain = GX.clean(h.daily?.precipitation_sum);
       const rfc = GX.clean(fc.daily?.precipitation_sum);
       const seasonStart = new Date(new Date().getFullYear(),5,1); // June 1
       let season = 0; (h.daily?.time||[]).forEach((d,i)=>{ if(new Date(d)>=seasonStart && rain[i]!=null) season+=rain[i]; });
-      const rain7 = GX.sum(rain.slice(-7).filter(v=>v!=null));
-      const rain30 = GX.sum(rain.slice(-30).filter(v=>v!=null));
+      const rain7 = GX.sumN(rain.slice(-7));
+      const rain30 = GX.sumN(rain.slice(-30));
       const trend = GX.trendPct(f.q,f.split);
-      const rainScore = Math.min(100, rain7/150*100);
-      const dischScore = Math.min(100, Math.max(0,trend||0)*2.5);
-      const pulse = Math.round(.6*rainScore+.4*dischScore);
-      const m = { rain7, rain30, season, pulse, trendPct: trend,
-        qNow: f.q[f.split-1], qFcMax: Math.max(...f.q.slice(f.split).filter(v=>v!=null)),
-        rainFc16: GX.sum(rfc.filter(v=>v!=null)) };
+      const pulse = rain7==null ? null : Math.round(.6*Math.min(100, rain7/150*100)+.4*Math.min(100, Math.max(0,trend||0)*2.5));
+      const m = { rain7, rain30, season: rain.length?season:null, pulse, trendPct: trend,
+        qNow: f.q[f.split-1], qFcMax: GX.maxN(f.q.slice(f.split)),
+        rainFc16: GX.sumN(rfc) };
       lastM=m; lastLabel=label;
       $("stats").innerHTML =
-        stat("Monsoon Pulse", m.pulse+" / 100", m.pulse>=60?"elevated":"within range")+
+        stat("Monsoon Pulse", m.pulse==null?"—":m.pulse+" / 100", m.pulse==null?"rain feed unreachable":(m.pulse>=60?"elevated":"within range"))+
         stat("Rain · 7 d", GX.num(m.rain7,1)+" mm","ERA5-Land")+
         stat("Rain · 30 d", GX.num(m.rain30,0)+" mm","")+
         stat("Season to date", GX.num(m.season,0)+" mm","since 1 June")+
@@ -3015,9 +3041,9 @@ const M_mo = (() => {
         scales:{x:{ticks:{maxTicksLimit:9,font:{size:9}}},
           y:{title:{display:true,text:"mm/day",font:{size:9}},ticks:{font:{size:9}}},
           y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"m³/s",font:{size:9}},ticks:{font:{size:9}}}}}});
-      $("fcline").innerHTML = `<b>Predictive read:</b> ${GX.num(m.rainFc16,0)} mm more rain expected within 16 days; river response ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"} week-on-week. Pulse index <b>${m.pulse}/100</b>.`;
+      $("fcline").innerHTML = `<b>Predictive read:</b> ${GX.num(m.rainFc16,0)} mm more rain expected within 16 days; river response ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"} week-on-week. Pulse index <b>${m.pulse==null?"—":m.pulse+"/100"}</b>.`;
       PolicyEngine.render($("policy"),"monsoon",label,m,lang);
-      setStatus(`Loaded ${label}. Solid bars = observed rain (ERA5-Land, ~6-day latency); pale bars = 16-day forecast; dashed line = GloFAS 31-day flow forecast.`);
+      setStatus(`Loaded ${label}. Solid bars = observed rain (ERA5-Land, ~6-day latency); pale bars = 16-day forecast; dashed line = GloFAS 31-day flow forecast.`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load point" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this point: "+err.message, true); }
   }
   function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:23.85,lon:90.26,label:"Savar · Dhaka"}); load(p.lat,p.lon,p.label); }
@@ -3039,10 +3065,16 @@ const M_co = (() => {
   async function load(lat,lon,label){
     setStatus("Loading coastal station — marine waves + wind/rain outlook …");
     try{
-      const [mar,fc] = await Promise.all([
+      const [marR,fcR] = await Promise.allSettled([
         GX.marine(lat,lon),
         GX.fc16(lat,lon,"wind_gusts_10m_max,wind_speed_10m_max,precipitation_sum")
       ]);
+      const mar = marR.status==="fulfilled" ? marR.value : null;
+      const fc = fcR.status==="fulfilled" ? fcR.value : {daily:{}};
+      if(!mar && fcR.status!=="fulfilled") throw (fcR.reason||new Error("both sources unreachable"));
+      const missing = [];
+      if(!mar) missing.push("marine wave model");
+      if(fcR.status!=="fulfilled") missing.push("wind/rain forecast blend");
       const gusts = GX.clean(fc.daily?.wind_gusts_10m_max);
       const rain = GX.clean(fc.daily?.precipitation_sum);
       const gust7 = gusts.slice(0,7).filter(v=>v!=null);
@@ -3058,7 +3090,7 @@ const M_co = (() => {
         const fut = wv.slice(split).filter(v=>v!=null);
         waveMax = fut.length?Math.max(...fut):null;
       }
-      const m = { gustMax, gustDay, waveMax, rainFc16: GX.sum(rain.filter(v=>v!=null)), trendPct:null, qNow:null };
+      const m = { gustMax, gustDay, waveMax, rainFc16: GX.sumN(rain), trendPct:null, qNow:null };
       lastM=m; lastLabel=label;
       const lvl = m.gustMax>=89||((m.waveMax||0)>=4.5)?3 : m.gustMax>=62||((m.waveMax||0)>=3.2)?2 : m.gustMax>=45||((m.waveMax||0)>=2.2)?1 : 0;
       $("stats").innerHTML =
@@ -3082,7 +3114,7 @@ const M_co = (() => {
           y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"km/h",font:{size:9}},ticks:{font:{size:9}}}}}});
       $("fcline").innerHTML = `<b>Predictive read:</b> peak gusts <b>${GX.num(m.gustMax)} km/h</b>${m.gustDay?(" around <b>"+m.gustDay+"</b>"):""}${m.waveMax!=null?(", waves to <b>"+GX.num(m.waveMax,1)+" m</b>"):""} within 7 days; ${GX.num(m.rainFc16,0)} mm of rain over 16 days.`;
       PolicyEngine.render($("policy"),"coastal",label,m,lang);
-      setStatus(`Loaded ${label}. Shaded area = observed waves (31 days); dashed = 7-day marine forecast; red line = daily peak gust outlook.`);
+      setStatus(`Loaded ${label}. Shaded area = observed waves (31 days); dashed = 7-day marine forecast; red line = daily peak gust outlook.`+(missing.length?` Note: ${missing.join(" and ")} unreachable right now — showing what loaded; press "Load station" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this station: "+err.message, true); }
   }
   function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:21.43,lon:91.97,label:"Cox's Bazar"}); load(p.lat,p.lon,p.label); }
@@ -3123,11 +3155,13 @@ const GXPolicyDock = (() => {
           const sel = document.querySelector("#pane-"+k+" select");
           let lat=DEFAULTS[k][0], lon=DEFAULTS[k][1], label=DEFAULTS[k][2];
           if(sel && /^-?\d/.test(sel.value)){ const [a,b]=sel.value.split(","); lat=+a; lon=+b; label=sel.options[sel.selectedIndex].text; }
-          const [f,h] = await Promise.all([ GX.flow(lat,lon), GX.hist(lat,lon,30,"precipitation_sum") ]);
-          const rain = GX.clean(h.daily?.precipitation_sum);
-          const m = { qNow:f.q[f.split-1], qFcMax:Math.max(...f.q.slice(f.split).filter(v=>v!=null)),
+          const [fr2,hr2] = await Promise.allSettled([ GX.flow(lat,lon), GX.hist(lat,lon,30,"precipitation_sum") ]);
+          if(fr2.status!=="fulfilled") throw fr2.reason;
+          const f = fr2.value;
+          const rain = GX.clean(hr2.status==="fulfilled" ? hr2.value.daily?.precipitation_sum : []);
+          const m = { qNow:f.q[f.split-1], qFcMax:GX.maxN(f.q.slice(f.split)),
             trendPct:GX.trendPct(f.q,f.split),
-            rain7:GX.sum(rain.slice(-7).filter(v=>v!=null)), rain30:GX.sum(rain.filter(v=>v!=null)) };
+            rain7:GX.sumN(rain.slice(-7)), rain30:GX.sumN(rain) };
           lastM=m; lastLabel=label;
           PolicyEngine.render(box, KINDMAP[k], label, m, lang);
         }catch(err){ box.innerHTML = "<em>Could not generate: "+err.message+". Check connectivity and retry.</em>"; }
