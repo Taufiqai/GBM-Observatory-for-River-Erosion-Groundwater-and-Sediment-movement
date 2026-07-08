@@ -1,5 +1,5 @@
 /* GBM Observatory service worker — v13 (Headwater · Monsoon · Coastal + Policy Engine) */
-const CACHE = "gbm-v15";
+const CACHE = "gbm-v16";
 self.addEventListener("install", e => {
   self.skipWaiting();
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(["./", "./index.html"])).catch(()=>{}));

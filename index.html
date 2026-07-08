@@ -895,6 +895,7 @@
       </select>
       <input type="text" id="hw-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
       <button id="hw-loadBtn" class="btn-primary">Load catchment</button>
+      <button id="hw-diagBtn" title="Test each data feed from this device">⚙ Test feeds</button>
     </div>
     <div id="hw-status">Ready — this station loads when first opened.</div>
   </div>
@@ -928,6 +929,7 @@
       </select>
       <input type="text" id="mo-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
       <button id="mo-loadBtn" class="btn-primary">Load point</button>
+      <button id="mo-diagBtn" title="Test each data feed from this device">⚙ Test feeds</button>
     </div>
     <div id="mo-status">Ready — this station loads when first opened.</div>
   </div>
@@ -961,6 +963,7 @@
       </select>
       <input type="text" id="co-customPt" placeholder="lat, lon" size="12" aria-label="Custom latitude, longitude">
       <button id="co-loadBtn" class="btn-primary">Load station</button>
+      <button id="co-diagBtn" title="Test each data feed from this device">⚙ Test feeds</button>
     </div>
     <div id="co-status">Ready — this station loads when first opened.</div>
   </div>
@@ -2659,17 +2662,48 @@ const GX = (() => {
   const sum  = a => a.reduce((x,y)=>x+y,0);
   const clean = a => (a||[]).map(v=>v==null?null:+v);
 
+  async function fetchT(url, ms){
+    const ctl = ("AbortController" in window) ? new AbortController() : null;
+    const to = ctl ? setTimeout(()=>ctl.abort(), ms) : null;
+    try{
+      const r = await fetch(url, ctl?{signal:ctl.signal}:undefined);
+      if(to) clearTimeout(to);
+      if(!r.ok) throw new Error("API "+r.status);
+      return await r.json();
+    }catch(e){ if(to) clearTimeout(to); throw (e.name==="AbortError"?new Error("timed out"):e); }
+  }
+  let _proxyUsed = false;
   async function j(url){
-    for(let a=0;a<2;a++){
+    try{ return await fetchT(url, 12000); }
+    catch(e1){
       try{
-        const ctl = ("AbortController" in window) ? new AbortController() : null;
-        const to = ctl ? setTimeout(()=>ctl.abort(), 15000) : null;
-        const r = await fetch(url, ctl?{signal:ctl.signal}:undefined);
-        if(to) clearTimeout(to);
-        if(!r.ok) throw new Error("API "+r.status);
-        return await r.json();
-      }catch(e){ if(a===1) throw (e.name==="AbortError"?new Error("timed out after 15 s"):e); }
+        const out = await fetchT(location.origin + "/api/om?u=" + encodeURIComponent(url), 20000);
+        _proxyUsed = true;
+        return out;
+      }catch(e2){
+        throw new Error((e1.message||e1) + " directly; /api/om proxy also failed (" + (e2.message||e2) + ")");
+      }
     }
+  }
+  function takeProxyFlag(){ const v=_proxyUsed; _proxyUsed=false; return v; }
+  async function diag(){
+    const tests = [
+      ["GloFAS flow", "https://flood-api.open-meteo.com/v1/flood?latitude=25.18&longitude=89.67&daily=river_discharge&past_days=2"],
+      ["ERA5 archive", "https://archive-api.open-meteo.com/v1/archive?latitude=23.85&longitude=90.26&start_date="+d8(new Date(Date.now()-9*864e5))+"&end_date="+d8(new Date(Date.now()-8*864e5))+"&daily=precipitation_sum"],
+      ["Forecast blend", "https://api.open-meteo.com/v1/forecast?latitude=23.85&longitude=90.26&daily=precipitation_sum&forecast_days=1"],
+      ["Marine waves", "https://marine-api.open-meteo.com/v1/marine?latitude=21.43&longitude=91.97&daily=wave_height_max&forecast_days=1"]
+    ];
+    const out = [];
+    for(const [name,u] of tests){
+      let line = name + ": ";
+      try{ await fetchT(u, 8000); line += "direct OK"; }
+      catch(e){
+        try{ await fetchT(location.origin+"/api/om?u="+encodeURIComponent(u), 12000); line += "direct blocked → proxy OK"; }
+        catch(e2){ line += "FAILED both ways (direct: "+(e.message||e)+"; proxy: "+(e2.message||e2)+")"; }
+      }
+      out.push(line);
+    }
+    return out;
   }
   const sumN = a => { const f=(a||[]).filter(v=>v!=null); return f.length? f.reduce((x,y)=>x+y,0) : null; };
   const meanN = a => { const f=(a||[]).filter(v=>v!=null); return f.length? f.reduce((x,y)=>x+y,0)/f.length : null; };
@@ -2730,7 +2764,7 @@ const GX = (() => {
     if(sel && /^-?\d/.test(sel.value)){ const [a,b]=sel.value.split(","); return {lat:+a,lon:+b,label:sel.options[sel.selectedIndex].text}; }
     return fallback;
   }
-  return {d8,num,mean,sum,sumN,meanN,maxN,clean,flow,flowBest,hist,fc16,marine,trendPct,parsePt};
+  return {d8,num,mean,sum,sumN,meanN,maxN,clean,flow,flowBest,hist,fc16,marine,trendPct,parsePt,takeProxyFlag,diag};
 })();
 
 /* ---------- Policy Engine: rule-based bilingual analysis ---------- */
@@ -2987,7 +3021,7 @@ const M_hw = (() => {
       $("fcline").innerHTML = `<b>Predictive read:</b> weekly mean discharge ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"}; 31-day peak ≈ <b>${GX.num(m.qFcMax)} m³/s</b>. Downstream arrival at Bahadurabad/Hardinge: <b>5–10 days</b>.`;
       PolicyEngine.render($("policy"),"headwater",label,m,lang);
       const cellNote = f.moved ? ` River cell auto-located at ${f.at[0].toFixed(2)}, ${f.at[1].toFixed(2)} — the strongest GloFAS channel near this site.` : "";
-      setStatus(`Loaded ${label}.${cellNote} Dashed segment = GloFAS 31-day forecast; bars = daily precipitation (history + 16-day outlook).`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load catchment" to retry.`:""), missing.length>0);
+      setStatus(`Loaded ${label}.${cellNote}`+(GX.takeProxyFlag()?" Some feeds arrived via the /api/om proxy — direct API calls are blocked on this network.":"")+` Dashed segment = GloFAS 31-day forecast; bars = daily precipitation (history + 16-day outlook).`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load catchment" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this catchment: "+err.message, true); }
   }
   function reload(){
@@ -3002,6 +3036,7 @@ const M_hw = (() => {
   let _inited=false;
   return { init(){ if(_inited)return; _inited=true;
       $("loadBtn").addEventListener("click",reload);
+      $("diagBtn").addEventListener("click",async()=>{ setStatus("Testing all four data feeds from this device — up to 30 s …"); const r=await GX.diag(); setStatus("FEED TEST — "+r.join("  ·  "), r.some(x=>x.includes("FAILED"))); });
       $("langEn").addEventListener("click",()=>{lang="en";$("langEn").classList.add("on");$("langBn").classList.remove("on"); if(lastM)PolicyEngine.render($("policy"),"headwater",lastLabel,lastM,lang);});
       $("langBn").addEventListener("click",()=>{lang="bn";$("langBn").classList.add("on");$("langEn").classList.remove("on"); if(lastM)PolicyEngine.render($("policy"),"headwater",lastLabel,lastM,lang);});
       reload(); },
@@ -3067,13 +3102,14 @@ const M_mo = (() => {
       $("fcline").innerHTML = `<b>Predictive read:</b> ${GX.num(m.rainFc16,0)} mm more rain expected within 16 days; river response ${m.trendPct==null?"steady":(m.trendPct>=0?"rising ":"falling ")+GX.num(Math.abs(m.trendPct),0)+"%"} week-on-week. Pulse index <b>${m.pulse==null?"—":m.pulse+"/100"}</b>.`;
       PolicyEngine.render($("policy"),"monsoon",label,m,lang);
       const cellNote = f.moved ? ` River response measured at the strongest GloFAS channel cell nearby (${f.at[0].toFixed(2)}, ${f.at[1].toFixed(2)}).` : "";
-      setStatus(`Loaded ${label}.${cellNote} Solid bars = observed rain (ERA5-Land, ~6-day latency); pale bars = 16-day forecast; dashed line = GloFAS 31-day flow forecast.`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load point" to retry.`:""), missing.length>0);
+      setStatus(`Loaded ${label}.${cellNote}`+(GX.takeProxyFlag()?" Some feeds arrived via the /api/om proxy — direct API calls are blocked on this network.":"")+` Solid bars = observed rain (ERA5-Land, ~6-day latency); pale bars = 16-day forecast; dashed line = GloFAS 31-day flow forecast.`+(missing.length?` Note: ${missing.join(" and ")} unreachable from this network right now — showing what loaded; press "Load point" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this point: "+err.message, true); }
   }
   function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:23.85,lon:90.26,label:"Savar · Dhaka"}); load(p.lat,p.lon,p.label); }
   let _inited=false;
   return { init(){ if(_inited)return; _inited=true;
       $("loadBtn").addEventListener("click",reload);
+      $("diagBtn").addEventListener("click",async()=>{ setStatus("Testing all four data feeds from this device — up to 30 s …"); const r=await GX.diag(); setStatus("FEED TEST — "+r.join("  ·  "), r.some(x=>x.includes("FAILED"))); });
       $("langEn").addEventListener("click",()=>{lang="en";$("langEn").classList.add("on");$("langBn").classList.remove("on"); if(lastM)PolicyEngine.render($("policy"),"monsoon",lastLabel,lastM,lang);});
       $("langBn").addEventListener("click",()=>{lang="bn";$("langBn").classList.add("on");$("langEn").classList.remove("on"); if(lastM)PolicyEngine.render($("policy"),"monsoon",lastLabel,lastM,lang);});
       reload(); },
@@ -3138,13 +3174,14 @@ const M_co = (() => {
           y1:{position:"right",grid:{drawOnChartArea:false},title:{display:true,text:"km/h",font:{size:9}},ticks:{font:{size:9}}}}}});
       $("fcline").innerHTML = `<b>Predictive read:</b> peak gusts <b>${GX.num(m.gustMax)} km/h</b>${m.gustDay?(" around <b>"+m.gustDay+"</b>"):""}${m.waveMax!=null?(", waves to <b>"+GX.num(m.waveMax,1)+" m</b>"):""} within 7 days; ${GX.num(m.rainFc16,0)} mm of rain over 16 days.`;
       PolicyEngine.render($("policy"),"coastal",label,m,lang);
-      setStatus(`Loaded ${label}. Shaded area = observed waves (31 days); dashed = 7-day marine forecast; red line = daily peak gust outlook.`+(missing.length?` Note: ${missing.join(" and ")} unreachable right now — showing what loaded; press "Load station" to retry.`:""), missing.length>0);
+      setStatus(`Loaded ${label}.`+(GX.takeProxyFlag()?" Some feeds arrived via the /api/om proxy — direct API calls are blocked on this network.":"")+` Shaded area = observed waves (31 days); dashed = 7-day marine forecast; red line = daily peak gust outlook.`+(missing.length?` Note: ${missing.join(" and ")} unreachable right now — showing what loaded; press "Load station" to retry.`:""), missing.length>0);
     }catch(err){ setStatus("Could not load this station: "+err.message, true); }
   }
   function reload(){ const p = GX.parsePt($("siteSelect"),$("customPt").value,{lat:21.43,lon:91.97,label:"Cox's Bazar"}); load(p.lat,p.lon,p.label); }
   let _inited=false;
   return { init(){ if(_inited)return; _inited=true;
       $("loadBtn").addEventListener("click",reload);
+      $("diagBtn").addEventListener("click",async()=>{ setStatus("Testing all four data feeds from this device — up to 30 s …"); const r=await GX.diag(); setStatus("FEED TEST — "+r.join("  ·  "), r.some(x=>x.includes("FAILED"))); });
       $("langEn").addEventListener("click",()=>{lang="en";$("langEn").classList.add("on");$("langBn").classList.remove("on"); if(lastM)PolicyEngine.render($("policy"),"coastal",lastLabel,lastM,lang);});
       $("langBn").addEventListener("click",()=>{lang="bn";$("langBn").classList.add("on");$("langEn").classList.remove("on"); if(lastM)PolicyEngine.render($("policy"),"coastal",lastLabel,lastM,lang);});
       reload(); },
