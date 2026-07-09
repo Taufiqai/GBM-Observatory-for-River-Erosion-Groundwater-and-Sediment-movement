@@ -212,7 +212,7 @@
 <header class="app">
   <div class="brand">
     <h1>Monitoring River Erosion, Groundwater, and the Alluvion–Diluvion Cycle in the Ganges–Brahmaputra–Meghna System focusing Bangladesh</h1>
-    <span class="sub">GBM System Observation Focusing Bangladesh. Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)</span>
+    <span class="sub">GBM System Observation Focusing Bangladesh. Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com) · BUILD v17</span>
   </div>
   <nav class="tabs" role="tablist" aria-label="Stations">
     <button class="tab" id="tab-rb" role="tab" aria-selected="false"><span class="tdot"></span>Riverbank <small>erosion & flow</small></button>
@@ -2673,16 +2673,24 @@ const GX = (() => {
     }catch(e){ if(to) clearTimeout(to); throw (e.name==="AbortError"?new Error("timed out"):e); }
   }
   let _proxyUsed = false;
+  const OM_MAP = {
+    "flood-api.open-meteo.com": "/om-flood",
+    "archive-api.open-meteo.com": "/om-archive",
+    "api.open-meteo.com": "/om-fc",
+    "marine-api.open-meteo.com": "/om-marine"
+  };
+  function rewriteURL(url){
+    try{ const u = new URL(url); const p = OM_MAP[u.hostname];
+      return p ? location.origin + p + u.pathname + u.search : null; }
+    catch(e){ return null; }
+  }
   async function j(url){
-    try{ return await fetchT(url, 12000); }
+    try{ return await fetchT(url, 10000); }
     catch(e1){
-      try{
-        const out = await fetchT(location.origin + "/api/om?u=" + encodeURIComponent(url), 20000);
-        _proxyUsed = true;
-        return out;
-      }catch(e2){
-        throw new Error((e1.message||e1) + " directly; /api/om proxy also failed (" + (e2.message||e2) + ")");
-      }
+      const rw = rewriteURL(url);
+      if(rw){ try{ const out = await fetchT(rw, 15000); _proxyUsed = true; return out; }catch(e2){} }
+      try{ const out = await fetchT(location.origin + "/api/om?u=" + encodeURIComponent(url), 15000); _proxyUsed = true; return out; }
+      catch(e3){ throw new Error((e1.message||e1) + " directly; same-origin proxy routes also failed — check that vercel.json is at the repo root"); }
     }
   }
   function takeProxyFlag(){ const v=_proxyUsed; _proxyUsed=false; return v; }
@@ -2698,8 +2706,12 @@ const GX = (() => {
       let line = name + ": ";
       try{ await fetchT(u, 8000); line += "direct OK"; }
       catch(e){
-        try{ await fetchT(location.origin+"/api/om?u="+encodeURIComponent(u), 12000); line += "direct blocked → proxy OK"; }
-        catch(e2){ line += "FAILED both ways (direct: "+(e.message||e)+"; proxy: "+(e2.message||e2)+")"; }
+        const rw = rewriteURL(u);
+        try{ await fetchT(rw, 12000); line += "direct blocked → edge proxy OK"; }
+        catch(e2){
+          try{ await fetchT(location.origin+"/api/om?u="+encodeURIComponent(u), 12000); line += "direct blocked → /api/om OK"; }
+          catch(e3){ line += "FAILED all routes (direct: "+(e.message||e)+"; edge: "+(e2.message||e2)+")"; }
+        }
       }
       out.push(line);
     }
