@@ -1,15 +1,30 @@
 {
   "name": "GBM Observatory",
   "short_name": "GBM Observatory",
-  "description": "Monitoring River Erosion, Groundwater, and the Alluvion\u2013Diluvion Cycle in the Ganges\u2013Brahmaputra\u2013Meghna System",
+  "description": "Observing the Ganges-Brahmaputra-Meghna (GBM) Systems focusing Bangladesh",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#10211C",
   "theme_color": "#10211C",
   "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

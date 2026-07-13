@@ -8,7 +8,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Monitoring River Erosion, Groundwater, and the Alluvion–Diluvion Cycle in the Ganges–Brahmaputra–Meghna System focusing Bangladesh</title>
+<title>Observing the Ganges-Brahmaputra-Meghna (GBM) Systems focusing Bangladesh</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -23,6 +23,15 @@
   :root{
     --ok:#3E7C4F; --accrete:#3E7C4F;
     --mono:'JetBrains Mono',monospace; --body:'Archivo',sans-serif; --disp:'Big Shoulders',sans-serif;
+    /* Safety net: neutral light defaults for every pane theme variable.
+       If any pane's own variable block is ever missing (merge drift, typo, partial deploy),
+       the pane falls back to this readable light theme instead of transparent-over-dark-body
+       (the "black screen" failure). Pane classes override these as normal. */
+    --paper:#EFF1EE; --panel:#FAFBFA; --ink:#1D2B26; --ink-soft:#54655E;
+    --accent:#2F6B5E; --accent-deep:#1F4A41; --accent2:#8A6B3A; --alert:#B3422C;
+    --hairline:#CBD5D1; --marker:#8A6B3A; --driver:#2F6B5E;
+    --fill-top:rgba(138,107,58,.25); --fill-bot:rgba(47,107,94,.25); --up:#B3422C; --down:#3E7C4F;
+    --tab-bg:#EFF1EE; --tab-ink:#1D2B26;
   }
   .pane-rb{--paper:#ECF1EE;--panel:#FAFCFB;--ink:#14333A;--ink-soft:#4A6168;--accent:#1879A0;--accent-deep:#0E5876;
     --accent2:#B85F23;--alert:#C0392B;--hairline:#C9D6D4;--marker:#B85F23;--driver:#1879A0;
@@ -94,6 +103,16 @@
     --accent2:#3E6FA8;--alert:#B3422C;--hairline:#C9DCCF;--marker:#1C5A36;--driver:#2E7D4F;
     --fill-top:rgba(62,111,168,.26);--fill-bot:rgba(46,125,79,.28);--up:#B3422C;--down:#3E7C4F}
   #tab-mn{--tab-bg:#EAF2EC; --tab-ink:#17301F} #tab-mn .tdot{background:#2E7D4F}
+
+  .pane-cc{--paper:#EDEDF2;--panel:#FAFAFC;--ink:#1C1F2E;--ink-soft:#5A5E72;--accent:#31396B;--accent-deep:#222847;
+    --accent2:#8C4A3E;--alert:#B3422C;--hairline:#CFD1DC;--marker:#222847;--driver:#31396B;
+    --fill-top:rgba(140,74,62,.25);--fill-bot:rgba(49,57,107,.25);--up:#B3422C;--down:#3E7C4F}
+  #tab-cc{--tab-bg:#EDEDF2; --tab-ink:#1C1F2E} #tab-cc .tdot{background:#31396B}
+  .cc-queue{list-style:none; padding:6px 12px 10px; font-family:var(--mono); font-size:.7rem; display:flex; flex-direction:column; gap:6px}
+  .cc-queue li{display:flex; gap:8px; align-items:flex-start; padding:6px 8px; border-left:3px solid var(--hairline); background:var(--panel)}
+  .cc-queue li.hi{border-left-color:var(--alert)}
+  .cc-queue li.md{border-left-color:#C8912A}
+  .cc-ai{padding:10px 12px; font-family:var(--body); font-size:.82rem; line-height:1.55; white-space:pre-wrap; max-height:420px; overflow:auto}
   .adv-table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:.68rem}
   .adv-table th,.adv-table td{border-bottom:1px solid var(--hairline); padding:6px 8px; text-align:left; vertical-align:top}
   .adv-table th{font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
@@ -111,26 +130,27 @@
   html,body{height:100%}
   body{font-family:var(--body); background:#10211C; display:flex; flex-direction:column; min-height:100vh}
   a{color:#1879A0}
-  header.app{background:#10211C; color:#E8F0EC; padding:10px 18px 0; display:flex; align-items:flex-end; gap:24px; flex-wrap:wrap}
-  .brand{display:flex; align-items:baseline; gap:10px; padding-bottom:12px}
-  .brand h1{font-family:var(--disp); font-weight:800; font-size:1.25rem; max-width:760px; letter-spacing:.04em; text-transform:uppercase; line-height:1.2}
-  .brand .sub{font-family:var(--mono); font-size:.64rem; color:#9DBCAC; letter-spacing:.12em; text-transform:uppercase}
-  nav.tabs{display:flex; gap:6px; margin-left:auto; flex-wrap:wrap; justify-content:flex-end; row-gap:4px}
-  .tab{font-family:var(--disp); font-weight:700; font-size:1.02rem; letter-spacing:.06em; text-transform:uppercase;
-    background:transparent; color:#9DBCAC; border:1px solid transparent; border-bottom:none; border-radius:6px 6px 0 0;
-    padding:9px 16px 11px; cursor:pointer; display:flex; align-items:center; gap:8px}
-  .tab small{font-family:var(--mono); font-weight:400; font-size:.58rem; letter-spacing:.1em; text-transform:none; opacity:.8}
-  .tab .tdot{width:9px;height:9px;border-radius:50%}
-  .tab:hover{color:#fff}
-  .tab.active{color:var(--tab-ink); background:var(--tab-bg); border-color:var(--tab-bg)}
+  header.app{background:#10211C; color:#E8F0EC; padding:12px 18px 10px; display:flex; flex-direction:column; gap:10px}
+  .brand{display:flex; flex-direction:column; gap:3px; padding-bottom:2px}
+  .brand h1{font-family:var(--disp); font-weight:800; font-size:1.35rem; letter-spacing:.04em; text-transform:uppercase; line-height:1.25; color:#F4FAF6}
+  .brand .sub{font-family:var(--mono); font-size:.66rem; color:#AECBBB; letter-spacing:.1em; text-transform:uppercase}
+  nav.tabs{display:flex; gap:7px; flex-wrap:wrap; row-gap:7px}
+  .tab{font-family:var(--disp); font-weight:700; font-size:1rem; letter-spacing:.06em; text-transform:uppercase;
+    background:rgba(255,255,255,.07); color:#EAF4EE; border:1px solid rgba(255,255,255,.28); border-radius:7px;
+    padding:9px 14px; cursor:pointer; display:flex; align-items:center; gap:8px}
+  .tab small{font-family:var(--mono); font-weight:400; font-size:.58rem; letter-spacing:.08em; text-transform:none; opacity:.85; color:#C4DACB}
+  .tab .tdot{width:11px;height:11px;border-radius:50%; box-shadow:0 0 0 2px rgba(255,255,255,.25)}
+  .tab:hover{background:rgba(255,255,255,.14); color:#fff; border-color:rgba(255,255,255,.5)}
+  .tab.active{color:var(--tab-ink); background:var(--tab-bg); border-color:var(--tab-bg); box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .tab.active small{color:inherit; opacity:.75}
   .tab:focus-visible{outline:2px solid #fff; outline-offset:1px}
-  @media (max-width:1650px){ .tab{font-size:.86rem; padding:8px 10px 10px; gap:6px} .tab small{font-size:.52rem} }
+  @media (max-width:1650px){ .tab{font-size:.88rem; padding:8px 11px; gap:6px} .tab small{font-size:.52rem} }
   @media (max-width:1200px){ .tab small{display:none} }
   @media (max-width:760px){
-    nav.tabs{display:grid; grid-template-columns:repeat(5,1fr); gap:3px; width:100%; margin-left:0; padding-bottom:6px}
-    .tab{font-size:.56rem; letter-spacing:.02em; padding:8px 1px; justify-content:center; border-radius:5px; border-bottom:1px solid transparent}
-    .tab.active{border-color:var(--tab-bg)}
-    .tab .tdot{width:5px;height:5px}
+    .brand h1{font-size:1.02rem}
+    nav.tabs{display:grid; grid-template-columns:repeat(3,1fr); gap:5px; width:100%; padding-bottom:4px}
+    .tab{font-size:.66rem; letter-spacing:.03em; padding:9px 2px; justify-content:center; border-radius:6px}
+    .tab .tdot{width:7px;height:7px}
   }
   #tab-rb{--tab-bg:#ECF1EE; --tab-ink:#14333A} #tab-rb .tdot{background:#1879A0}
   #tab-aq{--tab-bg:#EEF1EC; --tab-ink:#1C3328} #tab-aq .tdot{background:#0E7268}
@@ -225,10 +245,11 @@
 <body>
 <header class="app">
   <div class="brand">
-    <h1>Monitoring River Erosion, Groundwater, and the Alluvion–Diluvion Cycle in the Ganges–Brahmaputra–Meghna System focusing Bangladesh</h1>
-    <span class="sub">GBM System Observation Focusing Bangladesh. Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com)</span>
+    <h1>Observing the Ganges-Brahmaputra-Meghna (GBM) Systems focusing Bangladesh.</h1>
+    <span class="sub">Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com) <b id="buildTag" style="color:#7FA491;font-weight:400">· build 2026-07-13.3</b></span>
   </div>
   <nav class="tabs" role="tablist" aria-label="Stations">
+    <button class="tab" id="tab-cc" role="tab" aria-selected="false"><span class="tdot"></span>Command <small>system scan &amp; AI analyst</small></button>
     <button class="tab" id="tab-hw" role="tab" aria-selected="false"><span class="tdot"></span>Headwater <small>snowmelt &amp; upstream</small></button>
     <button class="tab" id="tab-mn" role="tab" aria-selected="false"><span class="tdot"></span>Monsoon <small>rainfall &amp; onset</small></button>
     <button class="tab" id="tab-rb" role="tab" aria-selected="false"><span class="tdot"></span>Riverbank <small>erosion & flow</small></button>
@@ -240,10 +261,12 @@
     <button class="tab" id="tab-ix" role="tab" aria-selected="false"><span class="tdot"></span>Confluence <small>interactions</small></button>
     <button class="tab" id="tab-bd" role="tab" aria-selected="false"><span class="tdot"></span>Bridge <small>institutional data</small></button>
   </nav>
-  <button id="glossaryBtn" title="Glossary of terms and acronyms used in this app" style="margin-left:8px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#2E5266;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">📖 Glossary</button>
-  <button id="alertsBtn" title="Get notified when any station's risk gauge turns High" style="margin-left:8px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#4A4A4A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">🔔 Alerts: off</button>
-  <button id="briefsBtn" title="Generate a plain-English policy brief for any station and situation" style="margin-left:8px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#6B4F8C;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">📋 Policy brief</button>
-  <button id="bdInstallBtn" title="Install GBM Observatory as an app" style="display:none;margin-left:10px;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#C8732A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">⬇ Install app</button>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+  <button id="glossaryBtn" title="Glossary of terms and acronyms used in this app" style="font-family:var(--mono);font-size:.7rem;font-weight:700;background:#2E5266;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">📖 Glossary</button>
+  <button id="alertsBtn" title="Get notified when any station's risk gauge turns High" style="font-family:var(--mono);font-size:.7rem;font-weight:700;background:#4A4A4A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">🔔 Alerts: off</button>
+  <button id="briefsBtn" title="Generate a plain-English policy brief for any station and situation" style="font-family:var(--mono);font-size:.7rem;font-weight:700;background:#6B4F8C;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">📋 Policy brief</button>
+  <button id="bdInstallBtn" title="Install GBM Observatory as an app" style="display:none;font-family:var(--mono);font-size:.7rem;font-weight:700;background:#C8732A;color:#fff;border:none;border-radius:5px;padding:8px 12px;cursor:pointer">⬇ Install app</button>
+  </div>
 </header>
 
 <div id="alertBanner" role="alert" style="display:none;position:sticky;top:0;z-index:500;background:#B3422C;color:#fff;font-family:var(--mono);font-size:.78rem;padding:9px 14px;align-items:center;gap:10px;justify-content:space-between">
@@ -1115,6 +1138,47 @@
   </div>
 </div>
 
+<div class="pane pane-cc" id="pane-cc">
+  <div class="station-bar">
+    <div class="controls">
+      <button id="cc-scanBtn" class="btn-primary">↻ Run system scan</button>
+      <span class="tag">scans sentinel points across all domains · ~10 s · auto-runs on open, refreshes every 30 min</span>
+    </div>
+    <div id="cc-status">Scanning the basin…</div>
+  </div>
+  <main>
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h"><span class="dot live"></span> System status board <span class="tag" id="cc-updatedTag">—</span></div>
+        <div class="sitebar"><b>Whole-basin picture, one glance.</b><br><span class="mono">Headline: <span id="cc-riskCat" class="r-low">scanning…</span></span></div>
+        <div class="reg-wrap" style="max-height:420px"><table class="reg-table" id="cc-board"><tbody><tr><td>Scan in progress…</td></tr></tbody></table></div>
+        <div class="forecast-line">Each row is one sentinel point scored exactly the way its home station scores it — same 10-year same-season percentile method, same data. Tap → to open the full station on that point. This board makes the platform active: nothing here waits for you to visit a tab first.</div>
+      </section>
+      <section class="panel">
+        <div class="panel-h">Priority action queue <span class="tag">rule-based, from the scan</span></div>
+        <ul class="cc-queue" id="cc-queue"><li>Waiting for the first scan…</li></ul>
+        <div class="forecast-line">Ordered by severity. Every line names the responsible agency because an action without an owner is a wish. Rule-based and deterministic — the AI analyst below adds reasoning on top, never replaces this floor.</div>
+      </section>
+    </div>
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h">AI analyst — situation assessment <span class="tag">Claude · runs server-side via /api/analyst</span></div>
+        <div class="controls" style="padding:8px 12px 0">
+          <select id="cc-aiLang" aria-label="Assessment language"><option value="en" selected>English</option><option value="bn">বাংলা</option><option value="both">English + বাংলা</option></select>
+          <button id="cc-aiBtn" class="btn-primary">Generate assessment</button>
+          <span class="tag" id="cc-aiTag">uses the scan above as input</span>
+        </div>
+        <div class="cc-ai" id="cc-aiOut">Run the system scan, then generate an assessment. The AI receives exactly the numbers on the status board — nothing more — and writes an operational read: what pattern the sentinels form together, what deserves attention first and why, what to verify with FFWC/BMD, and what can wait. It is instructed to say "the data doesn't support a conclusion" when it doesn't.</div>
+        <div class="forecast-line" id="cc-aiNote">Requires a one-time setup: add an ANTHROPIC_API_KEY environment variable in the Vercel project settings (Settings → Environment Variables) and redeploy. The key stays server-side; visitors never see it. Until then this panel explains itself instead of failing silently. The assessment is advisory reasoning over screening data — operational authority remains with FFWC, BMD, BWDB, DoE, DDM and the district administrations, and the text is instructed to say so.</div>
+      </section>
+    </div>
+  </main>
+  <div class="pane-foot">
+  DATA · The scan fetches, in parallel: GloFAS discharge (10-yr) at Sirajganj, Hardinge Bridge, Bhairab Bazar and the Meghna mouth; ERA5-Land rainfall (10-yr) at Sylhet, the Meghalaya slope and Rajshahi; ERA5-Land temperature (10-yr) at Pasighat — the same free feeds the individual stations use, at their sentinel points.
+  <br>METHOD · Every sentinel is scored by the app's standard: current value ranked as a percentile against the 10-year same-season record (±15 days of year, current period excluded). River and rainfall sentinels score the percentile directly; the headwater sentinel gates warmth to zero below 0 °C (melt logic); the Rajshahi sentinel inverts (a LOW 90-day rainfall percentile is the drought/aquifer-stress proxy — labeled as a proxy because true aquifer state needs the Aquifer station's full water balance). Categories: ≥85th High, ≥67th Watch. The action queue is a fixed rule table over those categories — deterministic and auditable. The AI analyst sends the scan JSON to a serverless function that calls Anthropic's Claude with instructions to reason only from the provided numbers, flag uncertainty explicitly, name the owning agency for every suggestion, and defer to FFWC/BMD as operational authorities; if the API key is not configured the feature reports that plainly. AI output is advisory synthesis, not a forecast and not a decision.
+  </div>
+</div>
+
 <div class="pane pane-mn" id="pane-mn">
   <div class="station-bar">
     <div class="controls">
@@ -1737,7 +1801,7 @@ document.getElementById("briefDownload").addEventListener("click",()=>{
 });
 
 /* ====================== global: risk alerts ====================== */
-const RISK_STATIONS = { rb:"Riverbank", aq:"Aquifer", ch:"Charland", ix:"Confluence", cs:"Coastal", hw:"Headwater", ol:"Outlook (ML)", mn:"Monsoon" };
+const RISK_STATIONS = { cc:"Command scan", rb:"Riverbank", aq:"Aquifer", ch:"Charland", ix:"Confluence", cs:"Coastal", hw:"Headwater", ol:"Outlook (ML)", mn:"Monsoon" };
 let alertsEnabled = localStorage.getItem("gbm-alerts-enabled") === "1";
 const alertSeen = new Map();
 function setAlertsButton(){
@@ -4278,7 +4342,133 @@ return {
 };
 })();
 
-const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs, hw: M_hw, ol: M_ol, mn: M_mn };
+const M_cc = (() => {
+const $ = id => document.getElementById("cc-"+id);
+const setStatus=(m,e=false)=>{const s=$("status");s.textContent=m;s.className=e?"err":"";};
+const fmt=(n,d=0)=>(n==null||isNaN(n))?"—":n.toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+let lastScan=null, scanTimer=null;
+
+const SENTINELS=[
+  {st:"rb", domain:"Riverbank", label:"Jamuna · Sirajganj",        kind:"q",   lat:24.45, lon:89.70},
+  {st:"rb", domain:"Riverbank", label:"Padma · Hardinge Bridge",   kind:"q",   lat:24.07, lon:89.03},
+  {st:"rb", domain:"Riverbank", label:"Meghna · Bhairab Bazar",    kind:"q",   lat:24.05, lon:90.98},
+  {st:"cs", domain:"Coastal",   label:"Meghna mouth · Bhola",      kind:"q",   lat:21.85, lon:90.95},
+  {st:"mn", domain:"Monsoon",   label:"Sylhet basin rain (30 d)",  kind:"p30", lat:24.90, lon:91.87},
+  {st:"mn", domain:"Monsoon",   label:"Meghalaya slope rain (30 d) — haor driver", kind:"p30", lat:25.30, lon:91.70},
+  {st:"hw", domain:"Headwater", label:"Pasighat warmth (7 d) — melt proxy", kind:"t7", lat:28.07, lon:95.33},
+  {st:"aq", domain:"Aquifer",   label:"Rajshahi rain deficit (90 d) — stress proxy", kind:"p90low", lat:24.37, lon:88.60}
+];
+function roll(v,n){ const out=new Array(v.length).fill(null);
+  for(let i=n-1;i<v.length;i++){ let s=0,miss=0; for(let k=i-n+1;k<=i;k++){ if(v[k]==null)miss++; else s+=v[k]; } if(miss<=n*0.2) out[i]=s; }
+  return out; }
+function lastVal(a){ for(let i=a.length-1;i>=0;i--) if(a[i]!=null) return {v:a[i], i}; return {v:null, i:-1}; }
+
+async function scanOne(s){
+  try{
+    if(s.kind==="q"){
+      const h=await GBM_clim.fetchDischargeHistory(s.lat,s.lon);
+      const {v,i}=lastVal(h.v);
+      const prev=h.v[Math.max(0,i-7)];
+      const p=GBM_clim.seasonalPercentile(h.t,h.v,v,new Date());
+      return {...s, now:v, unit:"m³/s", pct:p?p.pct:null, score:p?p.pct:null, dir:(prev!=null&&v!=null)?(v>prev*1.02?"▲":v<prev*0.98?"▼":"–"):"–"};
+    }
+    if(s.kind==="p30"||s.kind==="p90low"){
+      const n=s.kind==="p30"?30:90;
+      const h=await GBM_clim.fetchPrecipHistory(s.lat,s.lon);
+      const sums=roll(h.v,n);
+      const {v}=lastVal(sums);
+      const p=GBM_clim.seasonalPercentile(h.t,sums,v,new Date());
+      const score=p ? (s.kind==="p90low" ? 100-p.pct : p.pct) : null;
+      return {...s, now:v, unit:"mm", pct:p?p.pct:null, score, dir:"–"};
+    }
+    if(s.kind==="t7"){
+      const h=await GBM_clim.fetchTempHistory(s.lat,s.lon);
+      const m7=roll(h.v,7).map(x=>x==null?null:x/7);
+      const {v}=lastVal(m7);
+      const p=GBM_clim.seasonalPercentile(h.t,m7,v,new Date());
+      return {...s, now:v, unit:"°C", pct:p?p.pct:null, score:(p&&v!=null&&v>0)?p.pct:0, dir:"–"};
+    }
+  }catch(e){ return {...s, now:null, unit:"", pct:null, score:null, err:e.message}; }
+}
+const catOf=sc=>sc==null?{w:"no data",c:"r-low"}:sc>=85?{w:"High",c:"r-high"}:sc>=67?{w:"Watch",c:"r-mod"}:{w:"Normal",c:"r-low"};
+
+const QUEUE_RULES={
+  q:(x,cat)=>cat.w==="High"
+    ? [`hi|${x.label}: discharge at the ${x.pct}th seasonal percentile — verify against FFWC's official forecast now; BWDB field division to readiness on this corridor's erosion hotspots; district administration pre-identify bankline households (see Riverbank station for the reach detail).`]
+    : cat.w==="Watch" ? [`md|${x.label}: flow ${x.pct}th percentile and ${x.dir==="▲"?"rising":"holding"} — targeted embankment-toe inspection window (BWDB); re-check within 48 h.`] : [],
+  p30:(x,cat)=>cat.w==="High"
+    ? [`hi|${x.label}: rainfall at the ${x.pct}th seasonal percentile — river response expected within days (Confluence chain gives this corridor's measured lag); ${x.label.includes("Meghalaya")?"treat as a haor pre-alert: alert haor-district UNOs and check the Outlook station's AEZ 21 boro advisory (DDM/DAE);":"check urban/polder drainage readiness (BWDB);"} BMD bulletins govern.`]
+    : cat.w==="Watch" ? [`md|${x.label}: rainfall running ${x.pct}th percentile — watch the paired river sentinel on this corridor over the coming week.`] : [],
+  t7:(x,cat)=>cat.w==="High"
+    ? [`hi|${x.label}: headwater warmth at the ${x.pct}th percentile with above-freezing mean — melt contribution likely; flag to FFWC desk and expect Brahmaputra inflow support over 1–3 weeks; prioritize pre-monsoon embankment completion (BWDB).`]
+    : cat.w==="Watch" ? [`md|${x.label}: early-melt signal — cross-check MODIS snow cover on the Headwater station; note for FFWC 10-day outlooks.`] : [],
+  p90low:(x,cat)=>cat.w==="High"
+    ? [`hi|${x.label}: 90-day rainfall at only the ${x.pct}th percentile — drought-side stress on aquifers likely compounding Barind drawdown; DPHE check shallow drinking-water points; DAE flag irrigation scheduling before Boro pumping peaks; confirm with the Aquifer station's full water balance.`]
+    : cat.w==="Watch" ? [`md|${x.label}: rainfall deficit building (${x.pct}th percentile) — early warning for dry-season groundwater stress; monitor the Aquifer station.`] : []
+};
+
+function renderScan(results){
+  let rows="<tr><th>Domain</th><th>Sentinel</th><th>Now</th><th>Seasonal pctile</th><th>Status</th><th></th></tr>";
+  let nHigh=0,nWatch=0;
+  results.forEach((x,i)=>{
+    const cat=catOf(x.score);
+    if(cat.w==="High")nHigh++; if(cat.w==="Watch")nWatch++;
+    rows+=`<tr class="${cat.w==='High'?'over':''}"><td>${x.domain}</td><td>${x.label}${x.err?` <span class="flag">(${x.err})</span>`:""}</td>`
+      +`<td>${fmt(x.now, x.unit==="°C"?1:0)} ${x.unit} ${x.dir}</td><td>${x.pct==null?"—":x.pct+"th"}</td>`
+      +`<td><span class="${cat.c}">${cat.w}${x.score!=null&&x.kind==="p90low"?" (deficit "+x.score+")":""}</span></td>`
+      +`<td><button data-open="${x.st}" style="padding:1px 8px">→</button></td></tr>`;
+  });
+  $("board").innerHTML=rows;
+  $("board").querySelectorAll("button[data-open]").forEach(b=>b.onclick=()=>showStation(b.dataset.open));
+  const head=$("riskCat");
+  head.textContent=nHigh?`${nHigh} HIGH · ${nWatch} watch`:nWatch?`${nWatch} on watch`:"all sentinels normal";
+  head.className=nHigh?"r-high":nWatch?"r-mod":"r-low";
+  const q=[];
+  results.forEach(x=>{ const cat=catOf(x.score); (QUEUE_RULES[x.kind]||(()=>[]))(x,cat).forEach(l=>q.push(l)); });
+  q.sort((a,b)=>(a.startsWith("hi")?0:1)-(b.startsWith("hi")?0:1));
+  $("queue").innerHTML=q.length
+    ? q.map(l=>{const [lv,txt]=l.split("|");return `<li class="${lv}">${lv==="hi"?"⚠":"•"} ${txt}</li>`;}).join("")
+    : "<li>Nothing elevated across the sentinels — the queue's standing item applies: use quiet windows for embankment maintenance (BWDB), shelter readiness (DDM/CPP), and data validation via the Bridge station.</li>";
+}
+
+async function runScan(){
+  setStatus("Scanning "+SENTINELS.length+" sentinel points across the basin…");
+  $("scanBtn").disabled=true;
+  try{
+    const results=await Promise.all(SENTINELS.map(scanOne));
+    lastScan={at:new Date().toISOString(), results:results.map(({st,domain,label,kind,now,unit,pct,score,dir,err})=>({domain,label,kind,now,unit,pct,score,dir,err}))};
+    renderScan(results);
+    $("updatedTag").textContent="scanned "+new Date().toLocaleTimeString();
+    setStatus("Scan complete. "+(results.some(r=>r.err)?"Some sentinels failed to load — their rows say so.":"All sentinels reported."));
+  }catch(e){ setStatus("Scan failed: "+e.message,true); }
+  $("scanBtn").disabled=false;
+}
+$("scanBtn").addEventListener("click",runScan);
+
+/* ---------- AI analyst ---------- */
+$("aiBtn").addEventListener("click", async ()=>{
+  if(!lastScan){ $("aiOut").textContent="Run the system scan first — the analyst reasons only over scan data."; return; }
+  $("aiBtn").disabled=true;
+  $("aiOut").textContent="Consulting the analyst…";
+  try{
+    const r=await fetch("/api/analyst",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({scan:lastScan, language:$("aiLang").value})});
+    const j=await r.json().catch(()=>({}));
+    if(r.status===501){ $("aiOut").textContent="AI analyst is not configured yet on this deployment.\n\nOne-time setup (site owner): in Vercel → Project → Settings → Environment Variables, add ANTHROPIC_API_KEY with a key from console.anthropic.com, then redeploy. Nothing else changes; the key never reaches the browser."; }
+    else if(!r.ok){ $("aiOut").textContent="Analyst request failed ("+r.status+"): "+(j.error||"unknown error")+". The rule-based queue above is unaffected."; }
+    else { $("aiOut").textContent=j.text||"(empty response)"; }
+  }catch(e){ $("aiOut").textContent="Analyst request failed: "+e.message+". The rule-based queue above is unaffected."; }
+  $("aiBtn").disabled=false;
+});
+
+let _inited=false;
+return {
+  init(){ if(_inited) return; _inited=true; runScan(); clearInterval(scanTimer); scanTimer=setInterval(runScan, 30*60*1000); },
+  invalidate(){}
+};
+})();
+
+const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs, hw: M_hw, ol: M_ol, mn: M_mn, cc: M_cc };
 function showStation(k){
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active", p.id==="pane-"+k));
   document.querySelectorAll(".tab").forEach(t=>{
@@ -4296,7 +4486,7 @@ function showStation(k){
   }, 30);
 }
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click", ()=>showStation(t.id.slice(4))));
-showStation(currentStationFromHash() || "rb");
+showStation(currentStationFromHash() || "cc");
 
 </script>
 <script>

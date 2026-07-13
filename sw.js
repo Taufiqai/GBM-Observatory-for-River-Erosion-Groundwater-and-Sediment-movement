@@ -1,6 +1,6 @@
 // GBM Observatory service worker — caches the app shell for offline launch.
 // Live data (Open-Meteo, NASA GIBS, Esri) is always fetched from the network.
-const CACHE = "gbm-observatory-v11";
+const CACHE = "gbm-observatory-v12";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./agro-pollution.html", "./install.html"];
 
 self.addEventListener("install", e => {
