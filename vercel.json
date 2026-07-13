@@ -1,8 +1,15 @@
 {
-  "rewrites": [
-    { "source": "/om-flood/:path*",   "destination": "https://flood-api.open-meteo.com/:path*" },
-    { "source": "/om-archive/:path*", "destination": "https://archive-api.open-meteo.com/:path*" },
-    { "source": "/om-fc/:path*",      "destination": "https://api.open-meteo.com/:path*" },
-    { "source": "/om-marine/:path*",  "destination": "https://marine-api.open-meteo.com/:path*" }
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
   ]
 }
