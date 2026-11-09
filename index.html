@@ -17,6 +17,29 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <script>window.Chart||document.write('<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>')</script>
 <script>window.Chart||document.write('<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.min.js"><\/script>')</script>
+<script>
+/* Open-Meteo relay: some Bangladeshi networks block *.open-meteo.com. Every Open-Meteo request
+   is tried directly first; if it fails or stalls for 12 s, it is retried through this site's own
+   /api/om relay, and the rest of the session uses the relay. Other requests are untouched. */
+(function(){
+  if(!window.fetch) return;
+  var OM=/(^|\.)open-meteo\.com$/, orig=window.fetch.bind(window), viaProxy=false;
+  try{ viaProxy=sessionStorage.getItem('gbm-om-proxy')==='1'; }catch(e){}
+  var canProxy=location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1';
+  window.fetch=function(input,init){
+    var url; try{ url=new URL(typeof input==='string'?input:input.url, location.href); }catch(e){ return orig(input,init); }
+    if(!OM.test(url.hostname)||!canProxy) return orig(input,init);
+    var prox=function(){ return orig('/api/om?u='+encodeURIComponent(url.toString()), init); };
+    if(viaProxy) return prox();
+    var ctl=('AbortController' in window)?new AbortController():null, t=ctl?setTimeout(function(){ctl.abort();},12000):null;
+    var opts=Object.assign({}, init||{}); if(ctl) opts.signal=ctl.signal;
+    return orig(url.toString(), opts).then(function(r){ if(t) clearTimeout(t); return r; }, function(){
+      if(t) clearTimeout(t); viaProxy=true; try{ sessionStorage.setItem('gbm-om-proxy','1'); }catch(e){} return prox();
+    });
+  };
+})();
+</script>
+<script src="warn-engine.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,500;10..72,700;10..72,800&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -240,16 +263,60 @@
   .forecast-line b{color:var(--ink)}
   .pane-foot{padding:10px 18px 16px; font-size:.7rem; font-family:var(--mono); color:var(--ink-soft); line-height:1.5; max-width:1100px}
   .leaflet-container{font-family:var(--body)}
+  /* ---------- Early Warning station (pilot) ---------- */
+  .pane-ew{--paper:#EEF0F1;--panel:#FBFCFC;--ink:#17242B;--ink-soft:#4F5F67;--accent:#1F4E5F;--accent-deep:#14333F;
+    --accent2:#9F1239;--alert:#9F1239;--hairline:#CDD5D9;--marker:#14333F;--driver:#1F4E5F;
+    --fill-top:rgba(159,18,57,.22);--fill-bot:rgba(31,78,95,.22);--up:#9F1239;--down:#0F766E}
+  #tab-ew{--tab-bg:#EEF0F1; --tab-ink:#17242B} #tab-ew .tdot{background:#C2410C}
+  .ew-lv{display:inline-block; color:#fff; font-family:var(--mono); font-weight:700; font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; border-radius:3px; padding:2px 7px}
+  .ew-lv.l0{background:#0F766E} .ew-lv.l1{background:#8A5A00} .ew-lv.l2{background:#B43A0B} .ew-lv.l3{background:#9F1239} .ew-lv.lx{background:#5B6770}
+  .ew-cards{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:12px}
+  @media (max-width:700px){ .ew-cards{grid-template-columns:1fr} }
+  .ew-card{all:unset; box-sizing:border-box; cursor:pointer; display:flex; flex-direction:column; gap:6px; padding:12px; background:var(--panel);
+    border:1px solid var(--hairline); border-top:6px solid #5B6770; border-radius:4px; min-height:118px; font-family:var(--body); color:var(--ink)}
+  .ew-card:focus-visible{outline:2px solid var(--accent2); outline-offset:2px}
+  .ew-card.sel{box-shadow:0 0 0 2px var(--accent) inset}
+  .ew-card.l0{border-top-color:#0F766E} .ew-card.l1{border-top-color:#8A5A00} .ew-card.l2{border-top-color:#B43A0B} .ew-card.l3{border-top-color:#9F1239}
+  .ew-card h4{font-family:var(--disp); font-size:1.15rem; letter-spacing:.05em; text-transform:uppercase; line-height:1}
+  .ew-card .why{font-size:.74rem; color:var(--ink-soft); line-height:1.35}
+  .ew-card .meta{font-family:var(--mono); font-size:.6rem; color:var(--ink-soft); margin-top:auto}
+  .ew-skel{background:linear-gradient(90deg,rgba(0,0,0,.06),rgba(0,0,0,.12),rgba(0,0,0,.06)); background-size:200% 100%; animation:ewsk 1.4s infinite; border-radius:3px; height:12px}
+  @keyframes ewsk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @media (prefers-reduced-motion:reduce){ .ew-skel{animation:none} }
+  .ew-check{list-style:none; padding:8px 12px 12px; display:flex; flex-direction:column; gap:8px}
+  .ew-check li{display:grid; grid-template-columns:20px 1fr; gap:8px; align-items:start; font-size:.82rem; line-height:1.45}
+  .ew-check li input{margin-top:3px; width:16px; height:16px; accent-color:var(--accent)}
+  .ew-check li .bn{display:block; color:var(--ink-soft); font-size:.8rem}
+  .ew-pre{white-space:pre-wrap; font-family:var(--body); font-size:.8rem; line-height:1.5; padding:10px 12px; max-height:360px; overflow:auto; border-top:1px solid var(--hairline)}
+  .ew-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:8px 12px}
+  .ew-form{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px 12px; padding:10px 12px}
+  .ew-form label{display:flex; flex-direction:column; gap:3px; font-family:var(--mono); font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
+  .ew-form textarea{font-family:var(--body); font-size:.8rem; min-height:60px; border:1px solid var(--hairline); border-radius:3px; padding:6px; background:var(--panel); color:var(--ink); grid-column:1/-1}
+  .ew-strip{display:flex; gap:3px; flex-wrap:wrap; padding:8px 12px}
+  .ew-strip span{width:30px; height:34px; border-radius:3px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:var(--mono); font-size:.55rem; color:#fff; background:#5B6770}
+  .ew-strip span.l0{background:#0F766E} .ew-strip span.l1{background:#8A5A00} .ew-strip span.l2{background:#B43A0B} .ew-strip span.l3{background:#9F1239}
+  .ew-strip span.hidden{background:repeating-linear-gradient(45deg,#C9D1D5 0 4px,#DDE3E6 4px 8px); color:#4F5F67}
+  .ew-strip span.act{outline:3px solid #14333F; outline-offset:1px}
+  .ew-strip span.flood{box-shadow:0 -4px 0 #14333F inset}
+  .ew-note{font-family:var(--mono); font-size:.66rem; color:var(--ink-soft); line-height:1.5; padding:6px 12px 10px}
+  .ew-table{width:100%; border-collapse:collapse; font-family:var(--mono); font-size:.68rem}
+  .ew-table th,.ew-table td{border-bottom:1px solid var(--hairline); padding:6px 8px; text-align:left; vertical-align:top}
+  .ew-table th{font-size:.58rem; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); font-weight:600}
+  .ew-table td.num{text-align:right; white-space:nowrap}
+  .ew-empty{display:flex; gap:10px; align-items:center; padding:14px 12px; font-size:.8rem; color:var(--ink-soft)}
+  .ew-empty .dot{background:var(--accent)}
+  details.ew-admin summary{cursor:pointer; padding:8px 12px; font-family:var(--mono); font-size:.68rem; color:var(--ink-soft)}
 </style>
 </head>
 <body>
 <header class="app">
   <div class="brand">
     <h1>Observing the Ganges-Brahmaputra-Meghna (GBM) Systems focusing Bangladesh.</h1>
-    <span class="sub">Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com) <b id="buildTag" style="color:#7FA491;font-weight:400">· build 2026-07-13.3</b></span>
+    <span class="sub">Concept and Design: Md Taufiqul Islam, Joint Secretary to Bangladesh Government (taufiq28@gmail.com) <b id="buildTag" style="color:#7FA491;font-weight:400">· build 2026-11-09.1</b></span>
   </div>
   <nav class="tabs" role="tablist" aria-label="Stations">
     <button class="tab" id="tab-cc" role="tab" aria-selected="false"><span class="tdot"></span>Command <small>system scan &amp; AI analyst</small></button>
+    <button class="tab" id="tab-ew" role="tab" aria-selected="false"><span class="tdot"></span>Early Warning <small>Sirajganj · Kurigram · Sunamganj</small></button>
     <button class="tab" id="tab-hw" role="tab" aria-selected="false"><span class="tdot"></span>Headwater <small>snowmelt &amp; upstream</small></button>
     <button class="tab" id="tab-mn" role="tab" aria-selected="false"><span class="tdot"></span>Monsoon <small>rainfall &amp; onset</small></button>
     <button class="tab" id="tab-rb" role="tab" aria-selected="false"><span class="tdot"></span>Riverbank <small>erosion & flow</small></button>
@@ -1179,6 +1246,131 @@
   </div>
 </div>
 
+<div class="pane pane-ew" id="pane-ew">
+  <div class="station-bar">
+    <div class="controls">
+      <select id="ew-district" aria-label="District">
+        <option value="sirajganj">Sirajganj · সিরাজগঞ্জ (Jamuna)</option>
+        <option value="kurigram">Kurigram · কুড়িগ্রাম (Brahmaputra, Dharla)</option>
+        <option value="sunamganj">Sunamganj · সুনামগঞ্জ (Surma, haor)</option>
+      </select>
+      <select id="ew-role" aria-label="Your office">
+        <option value="dc">DC office / DDMC</option>
+        <option value="uno">UNO office / UzDMC</option>
+        <option value="pio">PIO — relief &amp; shelters</option>
+        <option value="dae">DAE — agriculture</option>
+      </select>
+      <select id="ew-lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="bn">বাংলা</option>
+        <option value="both" selected>English + বাংলা</option>
+      </select>
+      <button id="ew-refreshBtn" class="btn-primary">↻ Refresh assessment</button>
+      <button id="ew-drillBtn" title="Replay a documented past flood day by day, without knowing the outcome">▶ Drill mode</button>
+    </div>
+    <div id="ew-status">Ready — this station loads when first opened.</div>
+  </div>
+  <main>
+    <div class="right-col">
+      <section class="panel" aria-labelledby="ew-boardH">
+        <div class="panel-h" id="ew-boardH"><span class="dot live"></span> Pilot district warning board · জেলা সতর্কতা বোর্ড <span class="tag" id="ew-asOf">—</span></div>
+        <div class="ew-cards" id="ew-board" role="group" aria-label="Pilot districts">
+          <div class="ew-empty"><span class="dot live"></span>Loading the three pilot districts… the board fills in automatically.</div>
+        </div>
+        <div class="sitebar"><b id="ew-site">Sirajganj district</b><br><span class="mono">Level now · বর্তমান স্তর: <span id="ew-riskCat" class="r-low">—</span></span></div>
+        <div class="readout">
+          <div class="cell"><div class="lbl">Level · স্তর</div><div class="val" id="ew-vLevel">—</div><div class="delta flat" id="ew-vLevelBn">—</div></div>
+          <div class="cell"><div class="lbl">Earliest expected onset</div><div class="val" id="ew-vLead">—</div><div class="delta flat">days ahead, from the driver that set the level</div></div>
+          <div class="cell"><div class="lbl">Flow vs 2-yr flood flow</div><div class="val" id="ew-vRatio">—</div><div class="delta flat" id="ew-vRatioNote">modelled discharge today</div></div>
+          <div class="cell"><div class="lbl">Ensemble P(&gt; 5-yr flow)</div><div class="val" id="ew-vProb">—</div><div class="delta flat" id="ew-vProbNote">GloFAS members, next 10 days</div></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Why this level · কেন এই স্তর <span class="tag">every driver, highest first</span></div>
+        <div class="reg-wrap" style="max-height:320px"><table class="ew-table" id="ew-drivers"><tbody><tr><td>Waiting for the assessment…</td></tr></tbody></table></div>
+        <div class="ew-note">The district level is the highest level among these drivers. Each driver is compared with thresholds fitted to its own 20-year record, so a modelled flow that is biased high or low is still judged against its own history.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Flow and thresholds · প্রবাহ ও সীমা <span class="tag" id="ew-chartTag">last 45 days + 15-day GloFAS forecast</span></div>
+        <div class="chart-wrap" style="height:260px"><canvas id="ew-chart" aria-label="Modelled river flow with flood thresholds"></canvas></div>
+        <div class="chart-wrap" id="ew-rainWrap" style="height:170px;display:none"><canvas id="ew-rainChart" aria-label="Daily rainfall on the Meghalaya slope"></canvas></div>
+        <div class="ew-note" id="ew-chartNote">Dashed lines: 2-, 5- and 20-year flood flows of this point. Shaded band: 10–90% range of the 50 GloFAS ensemble members.</div>
+      </section>
+    </div>
+
+    <div class="right-col">
+      <section class="panel">
+        <div class="panel-h">What to do now · এখন করণীয় <span class="tag" id="ew-checkTag">—</span></div>
+        <ul class="ew-check" id="ew-checklist"><li><span></span><span>The checklist for your office appears once the level is known.</span></li></ul>
+        <div class="ew-note">Pilot checklist — suggested, low-regret steps for each level. Adapt it to your District/Upazila Disaster Management plan and the Standing Orders on Disaster. Ticks are kept only on this device.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Bulletin · বুলেটিন <span class="tag">rule-based now · AI version optional</span></div>
+        <div class="ew-row">
+          <button id="ew-copyBtn">Copy</button>
+          <button id="ew-dlBtn">Download .txt</button>
+          <button id="ew-aiBtn" class="btn-primary">AI bulletin (Claude)</button>
+          <span class="tag" id="ew-aiTag"></span>
+        </div>
+        <div class="ew-pre" id="ew-bulletin" aria-live="polite">The bulletin is written from the assessment as soon as it loads.</div>
+        <div class="ew-note">The rule-based bulletin is deterministic: same data, same text. The AI version rewrites it for your office from the same JSON and is instructed never to change the level or invent figures. Both are pilot decision-support: FFWC/BWDB and BMD are the official warning authorities.</div>
+      </section>
+
+      <section class="panel" id="ew-drillPanel" style="display:none">
+        <div class="panel-h">Drill mode · মহড়া <span class="tag">replay a documented flood, blind</span></div>
+        <div class="ew-row">
+          <select id="ew-drillEvent" aria-label="Drill scenario"></select>
+          <button id="ew-drillStart" class="btn-primary">Start</button>
+          <button id="ew-drillNext" disabled>Next day →</button>
+          <button id="ew-drillAct" disabled>I would activate preparedness today</button>
+        </div>
+        <div class="ew-strip" id="ew-drillStrip" aria-live="polite"></div>
+        <div class="ew-pre" id="ew-drillOut">Pick a scenario and press Start. Each press of “Next day” reveals one more day of what this system would have shown (hindcast, observed-state rules). Decide when you would activate preparedness. The documented flood date is revealed at the end.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Track record 2016–2024 · অতীত ফলাফল <span class="tag" id="ew-trackTag">hindcast vs documented floods</span></div>
+        <div class="reg-wrap" style="max-height:none"><table class="ew-table" id="ew-track"><tbody><tr><td>Loads when the station opens (needs the deployed site).</td></tr></tbody></table></div>
+        <div class="reg-wrap" style="max-height:260px"><table class="ew-table" id="ew-events"><tbody></tbody></table></div>
+        <div class="ew-note" id="ew-trackNote">Thresholds fitted on 1995–2014 only; scored on 2016–2024, which the thresholds never saw. A flood counts as detected if the level was reached between 7 days before and 2 days after the first dated report of the river above danger level. “Warning before report” is measured to that first report, so it overstates warning before the true crossing. Unconfirmed warning episodes are those with no dated report found — an upper bound on false alarms, because the flood record is incomplete.</div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-h">Pilot feedback · মতামত <span class="tag">anonymous · 1 minute</span></div>
+        <div class="ew-form">
+          <label>Clarity (1–5)<select id="ew-fbClarity"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label>Usefulness (1–5)<select id="ew-fbUseful"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label>Trust (1–5)<select id="ew-fbTrust"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <label>Did you act on it?<select id="ew-fbActed"><option value="">—</option><option value="yes">Yes</option><option value="planned">Planned</option><option value="no">No</option></select></label>
+          <label>Enough lead time?<select id="ew-fbLead"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select></label>
+          <label>Flooding in your area?<select id="ew-fbObserved"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option><option value="unsure">Unsure</option></select></label>
+          <textarea id="ew-fbComment" maxlength="800" placeholder="What would make this more useful? (Please don't include names or phone numbers.)" aria-label="Comment"></textarea>
+        </div>
+        <div class="ew-row"><button id="ew-fbSend" class="btn-primary">Send feedback</button><span class="tag" id="ew-fbMsg"></span></div>
+        <details class="ew-admin">
+          <summary>Pilot coordinator: export logs</summary>
+          <div class="ew-row">
+            <input type="password" id="ew-adminKey" placeholder="admin key" autocomplete="off" aria-label="Admin key" size="14">
+            <select id="ew-adminType" aria-label="Log type"><option value="feedback">Feedback &amp; drills</option><option value="warnings">Daily warning log</option></select>
+            <button id="ew-adminCsv">Download CSV</button>
+            <span class="tag" id="ew-adminMsg"></span>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+  <div class="pane-foot">
+  PURPOSE · An AI-assisted early-warning and decision aid for district and upazila officers in three flood-prone districts — Sirajganj (Jamuna), Kurigram (Brahmaputra, Dharla) and Sunamganj (Surma, haor flash floods). Pilot decision-support only: the Flood Forecasting and Warning Centre (FFWC/BWDB) and BMD are the official warning authorities, and response decisions rest with the Disaster Management Committees under the Standing Orders on Disaster.
+  <br>DATA · GloFAS v4 river discharge (Copernicus/ECMWF, via Open-Meteo): 20-year record, last 45 days and a 15-day forecast with 50 ensemble members. ERA5 daily rainfall and ECMWF-based 7-day rain forecast (Open-Meteo) on the Meghalaya slope and the Sunamganj haor. Upstream points: Bahadurabad (Jamuna), Dhubri (Brahmaputra, India), Kanaighat (Surma).
+  <br>METHOD · Rules EW-rules-v1, fixed before verification. River ladder: modelled flow ≥ 2-year flood flow = Watch, ≥ 5-year = Warning, ≥ 20-year = Severe (Gumbel fit to annual maxima). Upstream projection: log-linear fit at the best 1–7-day lag. Flash ladder (Sunamganj): 3-day rain ≥ 95th / 99th / 99.7th percentile of all days. Ensemble: ≥ 50% of members above the 5-year flow within 10 days = Warning (2-year = Watch, 20-year = Severe). The district level is the highest driver level. The AI bulletin (Claude, server-side) rewrites the rule-based assessment and cannot change it.
+  <br>LIMITS · Modelled flow is not a gauge reading in metres, and thresholds are statistical, not BWDB danger levels. The Teesta is not modelled. In the 2016–2024 hindcast the river rules caught 6 of 8 documented floods in Sirajganj and Kurigram, and the flash rules caught 10 of 11 in Sunamganj. Sunamganj's rain trigger also raised many Watch episodes that no dated report confirms. See the Track record panel and the written evaluation.
+  <br>PRIVACY · Feedback is anonymous: no names, phone numbers or accounts; phone numbers and e-mail addresses typed into comments are removed before storage.
+  </div>
+</div>
+
 <div class="pane pane-mn" id="pane-mn">
   <div class="station-bar">
     <div class="controls">
@@ -1369,6 +1561,14 @@ const GLOSSARY = [
   ["Monsoon onset", "The date the rainy season effectively begins. This app estimates it with a simple documented rule (first 5-day spell totalling 40 mm after 1 May); the official onset declaration belongs to BMD."],
   ["Ridge regression", "A standard, transparent machine-learning method: linear regression with a penalty that prevents overfitting. Used by the Outlook station, trained live in your browser — no black box, and its skill is reported on held-out data every time."],
   ["Skill score", "How much better a forecast is than a naive baseline. Here the baseline is climatology (\"assume a normal year\"): skill above 0 means the ML model genuinely adds information; near 0 means it doesn't, and the station says so."],
+  ["Return period (2-, 5-, 20-year flow)", "How rare a river flow is: a 2-year flow is reached or exceeded in about one year in two, a 20-year flow in about one year in twenty. The Early Warning station fits these to each river point's own record (Gumbel distribution of annual peaks)."],
+  ["Danger level (BWDB)", "The water level set by the Bangladesh Water Development Board at each gauge, above which flooding of the surrounding area is expected. FFWC reports rivers as 'above danger level' in centimetres. The pilot's thresholds are statistical flows, not danger levels; its hindcast measures how well the two line up."],
+  ["Ensemble forecast", "Many runs of the same forecast model from slightly different starting conditions (50 for GloFAS). The share of runs above a threshold is read as a probability."],
+  ["Lead time", "How many days before a flood a warning comes. The Early Warning track record measures it to the first dated press report of the river above danger level, so it overstates lead time before the true crossing."],
+  ["Hindcast", "Running today's rules over past years as if they had been in use, then comparing the warnings with what actually happened. The pilot fits its thresholds on 1995–2014 and scores 2016–2024 only."],
+  ["POD / false alarms", "Probability of detection: the share of documented floods that were warned. False alarms: warnings with no flood. Because the public flood record is incomplete, the pilot reports 'unconfirmed warning episodes' as an upper bound on false alarms."],
+  ["Anticipatory action", "Acting on a forecast before a disaster, using triggers and low-regret steps agreed in advance — the approach the Early Warning checklists follow."],
+  ["SOD", "Standing Orders on Disaster — the Government of Bangladesh instrument that sets the duties of ministries, Disaster Management Committees and officers before, during and after disasters."],
   ["DEM", "Digital Elevation Model — a raster of ground-surface height, used in erosion and flood-extent reasoning."]
 ];
 function renderGlossary(filter=""){
@@ -1389,6 +1589,22 @@ document.getElementById("glossarySearch").addEventListener("input", e=>renderGlo
 
 /* ====================== global: policy brief generator ====================== */
 const BRIEFS = {
+  ew:{ name:"Early Warning (pilot districts)", monitors:"Flood early-warning levels for three pilot districts — Sirajganj (Jamuna), Kurigram (Brahmaputra, Dharla) and Sunamganj (Surma and haor flash floods) — combining modelled river flow, upstream flow, the GloFAS ensemble forecast and heavy-rain triggers.",
+    basis:"GloFAS v4 modelled discharge and 50-member ensemble forecast, ERA5 and ECMWF-based rainfall (via Open-Meteo), scored against return-period and rainfall-percentile thresholds fixed in advance (EW-rules-v1). Hindcast 2016–2024: 6 of 8 documented floods detected in Sirajganj and in Kurigram, 10 of 11 in Sunamganj, with a median of 2–4 days' warning before the first press report; Sunamganj's rain trigger also produces frequent unconfirmed Watch episodes. Modelled flow is not a gauge reading.",
+    agencies:"FFWC/BWDB (official flood forecasts and gauges), BMD (rainfall warnings), DDM and the District/Upazila Disaster Management Committees (response under the Standing Orders on Disaster), DAE and DLS (crops and livestock).",
+    situations:{
+      "Quiet — no signal (Low)":{signal:"No driver has reached its Watch threshold: modelled flow is below the 2-year flood flow, the ensemble does not cross it, and 3-day rain is below its 95th percentile.",
+        meaning:"No flood signal from the pilot rules for the coming days. Official FFWC bulletins remain the reference.",
+        actions:["Keep DMC contact lists, shelter lists and stock registers current.","During the monsoon, read FFWC's daily bulletin even on quiet days.","Use quiet periods for tabletop drills with this station's drill mode."]},
+      "Watch — get ready (Moderate)":{signal:"At least one driver has reached Watch: modelled flow or its upstream projection at or above the 2-year flood flow, at least half of the ensemble above it within 10 days, or 3-day rain at or above its 95th percentile.",
+        meaning:"A flood is plausible within days. In the 2016–2024 hindcast, Watch came 2–4 days (median) before most documented danger-level reports, but it is also raised without a confirmed flood, especially in Sunamganj — so Watch calls for low-cost readiness, not response.",
+        actions:["DC office: check FFWC's bulletin for the river and alert the DDMC member-secretary.","UNO offices: confirm union focal points and list exposed char and low-lying unions with their shelters.","PIO: check relief stock and shelter readiness. DAE: advise early harvest of mature crops in low fields."]},
+      "Warning — prepare (Elevated)":{signal:"A driver has reached Warning: modelled flow (or the projection) at or above the 5-year flood flow, half the ensemble above it, or 3-day rain at or above its 99th percentile.",
+        meaning:"A significant flood is likely. Lead time from this level is short (about 1–2 days in the hindcast), so preparation should already be under way from Watch.",
+        actions:["Put the DDMC on standby or convene it; get the latest FFWC/BWDB gauge forecast.","Activate Upazila DMCs, start miking in exposed unions, prepare shelters and lists of households needing help to evacuate.","Move relief stock forward and arrange boats; urge immediate harvest and moving livestock to high ground."]},
+      "Severe — flood expected (High)":{signal:"A driver has reached Severe: modelled flow at or above the 20-year flood flow, half the ensemble above it, or 3-day rain at or above its 99.7th percentile.",
+        meaning:"An extreme flood is likely or under way. In the hindcast this level was reached only in Sunamganj and usually on or after the first danger-level report, so treat it as confirmation, not as early warning.",
+        actions:["Treat as an emergency under the local plan and the Standing Orders on Disaster: DDMC in session, control rooms open.","Evacuate identified char and low-lying areas; open all shelters; run rescue boats.","Report damage and needs to DDM in the standard SOS and D-Form formats; record crop losses for the assessment."]}}},
   hw:{ name:"Headwater / Snowmelt", monitors:"Himalayan headwater conditions — temperature, snowfall and snow-cover imagery — that drive Ganges and Brahmaputra flow into Bangladesh 1–3 weeks later.",
     basis:"NASA MODIS snow-cover imagery and ERA5-Land reanalysis temperature/snowfall (modeled estimates, ~1 week latency), scored against a 10-year same-season baseline.",
     agencies:"FFWC (flood outlooks), BWDB (pre-monsoon embankment checks), Ministry of Water Resources; upstream data via JRC (Joint Rivers Commission) channels.",
@@ -1523,10 +1739,26 @@ const BRIEFS = {
         meaning:"This is the system's primary driver firing: expect discharge rises within days on the corridor's rivers, rapid aquifer/soil saturation, and — depending on location and month — haor flash-flood or urban waterlogging scenarios.",
         actions:["Treat BMD's heavy-rainfall warnings and FFWC's forecasts as operational; use this station to see which corridor and which downstream stations to watch.","Trace the Confluence chain now to get this corridor's measured rain→flow lag — that number is the realistic preparation window.","DDM/district: pre-position for the location-specific scenario (haor harvest race, urban drainage, char inundation) rather than generic flood response.","Log the event date; after the peak, the Confluence falling-limb check becomes the relevant watch."]}}},
 };
-const GAUGE_MAP = { hw:"hw-riskCat", rb:"rb-riskCat", aq:"aq-riskCat", ch:"ch-riskCat", ix:"ix-riskCat", cs:"cs-riskCat", ol:"ol-riskCat", mn:"mn-riskCat" };
+const GAUGE_MAP = { ew:"ew-riskCat", hw:"hw-riskCat", rb:"rb-riskCat", aq:"aq-riskCat", ch:"ch-riskCat", ix:"ix-riskCat", cs:"cs-riskCat", ol:"ol-riskCat", mn:"mn-riskCat" };
 
 /* ---- Bangla translations of every brief template (keys mirror BRIEFS exactly) ---- */
 const BRIEFS_BN = {
+  ew:{ name:"আগাম সতর্কতা (পাইলট জেলা)", monitors:"তিনটি পাইলট জেলার বন্যা-সতর্কতার স্তর — সিরাজগঞ্জ (যমুনা), কুড়িগ্রাম (ব্রহ্মপুত্র, ধরলা) ও সুনামগঞ্জ (সুরমা ও হাওরের আকস্মিক বন্যা) — মডেলকৃত নদীপ্রবাহ, উজানের প্রবাহ, GloFAS এনসেম্বল পূর্বাভাস ও ভারী বৃষ্টির শর্ত মিলিয়ে।",
+    basis:"GloFAS v4 মডেলকৃত প্রবাহ ও ৫০-সদস্যের এনসেম্বল পূর্বাভাস, ERA5 ও ECMWF-ভিত্তিক বৃষ্টিপাত (Open-Meteo-র মাধ্যমে); আগেই নির্ধারিত রিটার্ন-পিরিয়ড ও বৃষ্টিপাত-পার্সেন্টাইল সীমার (EW-rules-v1) সঙ্গে তুলনা। ২০১৬–২০২৪ পশ্চাৎ-যাচাই: সিরাজগঞ্জ ও কুড়িগ্রামে নথিভুক্ত ৮টির মধ্যে ৬টি করে এবং সুনামগঞ্জে ১১টির মধ্যে ১০টি বন্যা শনাক্ত, প্রথম সংবাদ-প্রতিবেদনের মধ্যমা ২–৪ দিন আগে; সুনামগঞ্জের বৃষ্টি-শর্ত অনেক অনিশ্চিত 'সতর্ক নজর'-ও দেয়। মডেলকৃত প্রবাহ গেজের পাঠ নয়।",
+    agencies:"FFWC/BWDB (দাপ্তরিক বন্যা পূর্বাভাস ও গেজ), BMD (বৃষ্টিপাত সতর্কতা), দুর্যোগ ব্যবস্থাপনা অধিদপ্তর এবং জেলা/উপজেলা দুর্যোগ ব্যবস্থাপনা কমিটি (দুর্যোগ বিষয়ক স্থায়ী আদেশাবলি অনুযায়ী সাড়াদান), ডিএই ও প্রাণিসম্পদ অধিদপ্তর (ফসল ও গবাদিপশু)।",
+    situations:{
+      "Quiet — no signal (Low)":{signal:"কোনো চালক 'সতর্ক নজর' সীমায় পৌঁছায়নি: মডেলকৃত প্রবাহ ২-বছরের বন্যা-প্রবাহের নিচে, এনসেম্বল তা অতিক্রম করছে না, এবং ৩ দিনের বৃষ্টি ৯৫তম পার্সেন্টাইলের নিচে।",
+        meaning:"আগামী কয়েক দিনের জন্য পাইলট নিয়মে বন্যার সংকেত নেই। দাপ্তরিক FFWC বুলেটিনই মানদণ্ড।",
+        actions:["দুর্যোগ ব্যবস্থাপনা কমিটির যোগাযোগ-তালিকা, আশ্রয়কেন্দ্রের তালিকা ও মজুত-রেজিস্টার হালনাগাদ রাখুন।","বর্ষাকালে শান্ত দিনেও FFWC-এর দৈনিক বুলেটিন দেখুন।","শান্ত সময়ে এই স্টেশনের মহড়া-মোডে টেবিলটপ মহড়া করুন।"]},
+      "Watch — get ready (Moderate)":{signal:"অন্তত একটি চালক 'সতর্ক নজর' স্তরে: মডেলকৃত প্রবাহ বা উজানের প্রক্ষেপণ ২-বছরের বন্যা-প্রবাহ বা তার বেশি, ১০ দিনের মধ্যে অন্তত অর্ধেক এনসেম্বল-সদস্য তার উপরে, অথবা ৩ দিনের বৃষ্টি ৯৫তম পার্সেন্টাইল বা তার বেশি।",
+        meaning:"কয়েক দিনের মধ্যে বন্যা হতে পারে। ২০১৬–২০২৪ পশ্চাৎ-যাচাইয়ে অধিকাংশ নথিভুক্ত বিপদসীমা-প্রতিবেদনের ২–৪ দিন (মধ্যমা) আগে 'সতর্ক নজর' এসেছিল, তবে নিশ্চিত বন্যা ছাড়াও তা আসে, বিশেষত সুনামগঞ্জে — তাই এ স্তরে কম-খরচের প্রস্তুতি, সাড়াদান নয়।",
+        actions:["জেলা প্রশাসকের কার্যালয়: নদীর FFWC বুলেটিন দেখুন এবং জেলা দুর্যোগ ব্যবস্থাপনা কমিটির সদস্য-সচিবকে অবহিত করুন।","ইউএনও কার্যালয়: ইউনিয়নের দায়িত্বপ্রাপ্তদের নিশ্চিত করুন এবং ঝুঁকিপূর্ণ চর ও নিচু ইউনিয়ন ও তাদের আশ্রয়কেন্দ্রের তালিকা করুন।","পিআইও: ত্রাণ-মজুত ও আশ্রয়কেন্দ্রের প্রস্তুতি যাচাই করুন। ডিএই: নিচু জমির পাকা ফসল আগাম কাটার পরামর্শ দিন।"]},
+      "Warning — prepare (Elevated)":{signal:"কোনো চালক 'প্রস্তুতি' স্তরে: মডেলকৃত প্রবাহ (বা প্রক্ষেপণ) ৫-বছরের বন্যা-প্রবাহ বা তার বেশি, অর্ধেক এনসেম্বল-সদস্য তার উপরে, অথবা ৩ দিনের বৃষ্টি ৯৯তম পার্সেন্টাইল বা তার বেশি।",
+        meaning:"উল্লেখযোগ্য বন্যার সম্ভাবনা বেশি। এ স্তর থেকে সময় কম (পশ্চাৎ-যাচাইয়ে প্রায় ১–২ দিন), তাই প্রস্তুতি 'সতর্ক নজর' থেকেই শুরু হওয়া উচিত।",
+        actions:["জেলা দুর্যোগ ব্যবস্থাপনা কমিটিকে প্রস্তুত রাখুন বা সভা ডাকুন; FFWC/BWDB-এর সর্বশেষ গেজ-পূর্বাভাস নিন।","উপজেলা কমিটি সক্রিয় করুন, ঝুঁকিপূর্ণ ইউনিয়নে মাইকিং শুরু করুন, আশ্রয়কেন্দ্র এবং সরে যেতে সহায়তা লাগবে এমন পরিবারের তালিকা প্রস্তুত করুন।","ত্রাণ এগিয়ে রাখুন ও নৌকার ব্যবস্থা করুন; অবিলম্বে ফসল কাটা এবং গবাদিপশু উঁচু স্থানে সরাতে বলুন।"]},
+      "Severe — flood expected (High)":{signal:"কোনো চালক 'জরুরি' স্তরে: মডেলকৃত প্রবাহ ২০-বছরের বন্যা-প্রবাহ বা তার বেশি, অর্ধেক এনসেম্বল-সদস্য তার উপরে, অথবা ৩ দিনের বৃষ্টি ৯৯.৭তম পার্সেন্টাইল বা তার বেশি।",
+        meaning:"চরম বন্যার সম্ভাবনা বা চলমান। পশ্চাৎ-যাচাইয়ে এ স্তর কেবল সুনামগঞ্জে এসেছে, সাধারণত প্রথম বিপদসীমা-প্রতিবেদনের দিনে বা পরে — তাই এটিকে আগাম সতর্কতা নয়, নিশ্চিতকরণ হিসেবে ধরুন।",
+        actions:["স্থানীয় পরিকল্পনা ও দুর্যোগ বিষয়ক স্থায়ী আদেশাবলি অনুযায়ী জরুরি অবস্থা হিসেবে বিবেচনা করুন: কমিটির সভা চলমান, নিয়ন্ত্রণকক্ষ চালু।","চিহ্নিত চর ও নিচু এলাকা থেকে লোকজন সরিয়ে নিন; সব আশ্রয়কেন্দ্র খুলুন; উদ্ধারে নৌকা চালান।","ক্ষয়ক্ষতি ও চাহিদা নির্ধারিত এসওএস ও ডি-ফরমে দুর্যোগ ব্যবস্থাপনা অধিদপ্তরে পাঠান; ফসলের ক্ষতি লিপিবদ্ধ করুন।"]}}},
   hw:{ name:"হেডওয়াটার / তুষারগলন", monitors:"হিমালয়ের উৎস-অঞ্চলের তাপমাত্রা, তুষারপাত ও তুষার-আচ্ছাদনের স্যাটেলাইট চিত্র — যা ১–৩ সপ্তাহ পরে বাংলাদেশে গঙ্গা-ব্রহ্মপুত্রের প্রবাহ নির্ধারণ করে।",
     basis:"নাসার MODIS তুষার-চিত্র ও ERA5-Land পুনর্বিশ্লেষণ (মডেল-অনুমান, ~১ সপ্তাহ বিলম্ব), ১০ বছরের একই-মৌসুম ভিত্তিরেখায় র‍্যাংক করা।",
     agencies:"FFWC (বন্যা পূর্বাভাস), BWDB (প্রাক-মৌসুম বাঁধ পরিদর্শন), পানি সম্পদ মন্ত্রণালয়; উজানের তথ্য JRC (যৌথ নদী কমিশন) চ্যানেলে।",
@@ -1801,7 +2033,7 @@ document.getElementById("briefDownload").addEventListener("click",()=>{
 });
 
 /* ====================== global: risk alerts ====================== */
-const RISK_STATIONS = { cc:"Command scan", rb:"Riverbank", aq:"Aquifer", ch:"Charland", ix:"Confluence", cs:"Coastal", hw:"Headwater", ol:"Outlook (ML)", mn:"Monsoon" };
+const RISK_STATIONS = { cc:"Command scan", ew:"Early Warning", rb:"Riverbank", aq:"Aquifer", ch:"Charland", ix:"Confluence", cs:"Coastal", hw:"Headwater", ol:"Outlook (ML)", mn:"Monsoon" };
 let alertsEnabled = localStorage.getItem("gbm-alerts-enabled") === "1";
 const alertSeen = new Map();
 function setAlertsButton(){
@@ -4468,7 +4700,423 @@ return {
 };
 })();
 
-const STATIONS = { rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs, hw: M_hw, ol: M_ol, mn: M_mn, cc: M_cc };
+/* ====================== Early Warning station (pilot): Sirajganj · Kurigram · Sunamganj ====================== */
+const M_ew = (() => {
+const $ = id => document.getElementById("ew-"+id);
+const W = window.GBMWarn;
+const setStatus=(m,e=false)=>{const s=$("status"); s.textContent=m; s.className=e?"err":"";};
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const BNDIG="০১২৩৪৫৬৭৮৯";
+const bnNum = s => String(s).replace(/\d/g, d=>BNDIG[d]);
+const fmt=(n,d=0)=>(n==null||!isFinite(n))?"—":Number(n).toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d});
+const fmtBn=(n,d=0)=>(n==null||!isFinite(n))?"—":bnNum(Number(n).toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d}));
+const pct = p => p==null?"—":Math.round(p*100)+"%";
+const LS = { get(k){ try{return localStorage.getItem(k);}catch(e){return null;} }, set(k,v){ try{localStorage.setItem(k,v);}catch(e){} } };
+
+const ROLES = {
+  dc:{en:"DC office / District Disaster Management Committee", bn:"জেলা প্রশাসকের কার্যালয় / জেলা দুর্যোগ ব্যবস্থাপনা কমিটি"},
+  uno:{en:"UNO office / Upazila Disaster Management Committee", bn:"ইউএনও কার্যালয় / উপজেলা দুর্যোগ ব্যবস্থাপনা কমিটি"},
+  pio:{en:"PIO — relief and shelters", bn:"পিআইও — ত্রাণ ও আশ্রয়কেন্দ্র"},
+  dae:{en:"DAE — agriculture extension", bn:"কৃষি সম্প্রসারণ অধিদপ্তর (ডিএই)"}
+};
+// Pilot checklists per level and office: low-regret steps first; to be adapted to local DMC plans and the SOD.
+const A = (en,bn)=>({en,bn});
+const ACTIONS = {
+  0:{ dc:[A("No flood signal from the pilot rules. Keep the DDMC contact list and the evacuation plan current.","পাইলট নিয়মে বন্যার কোনো সংকেত নেই। জেলা দুর্যোগ ব্যবস্থাপনা কমিটির যোগাযোগ-তালিকা ও সরিয়ে নেওয়ার পরিকল্পনা হালনাগাদ রাখুন।"),
+          A("During the monsoon, read FFWC's daily bulletin even on Normal days.","বর্ষাকালে স্বাভাবিক দিনেও FFWC-এর দৈনিক বুলেটিন দেখুন।")],
+      uno:[A("Routine: keep union focal points and the flood-shelter list up to date.","নিয়মিত কাজ: ইউনিয়ন পর্যায়ের দায়িত্বপ্রাপ্ত ব্যক্তি ও বন্যা-আশ্রয়কেন্দ্রের তালিকা হালনাগাদ রাখুন।")],
+      pio:[A("Routine: check stock registers for dry food, water-purification tablets, tarpaulins and boats.","নিয়মিত কাজ: শুকনো খাবার, পানি বিশুদ্ধকরণ ট্যাবলেট, ত্রিপল ও নৌকার মজুত-রেজিস্টার যাচাই করুন।")],
+      dae:[A("Routine crop advisory; no flood-related change needed.","নিয়মিত কৃষি-পরামর্শ; বন্যা-সংক্রান্ত কোনো পরিবর্তন প্রয়োজন নেই।")] },
+  1:{ dc:[A("Read today's FFWC bulletin for this river and note the forecast at the nearest BWDB gauge.","এই নদীর জন্য আজকের FFWC বুলেটিন দেখুন এবং নিকটতম BWDB গেজের পূর্বাভাস লিখে রাখুন।"),
+          A("Alert the DDMC member-secretary; confirm UNO and PIO contacts and duty rosters.","জেলা দুর্যোগ ব্যবস্থাপনা কমিটির সদস্য-সচিবকে অবহিত করুন; ইউএনও ও পিআইও-দের যোগাযোগ ও দায়িত্ব-তালিকা নিশ্চিত করুন।"),
+          A("Check this board again tomorrow morning — Watch means readiness, not response.","আগামীকাল সকালে আবার এই বোর্ড দেখুন — 'সতর্ক নজর' মানে প্রস্তুত থাকা, এখনই সাড়া নয়।")],
+      uno:[A("Confirm that union parishad chairs and volunteer focal points can be reached today.","ইউনিয়ন পরিষদ চেয়ারম্যান ও স্বেচ্ছাসেবক দায়িত্বপ্রাপ্তদের সঙ্গে আজই যোগাযোগ নিশ্চিত করুন।"),
+           A("List the char and low-lying unions flooded in past years and their nearest shelters.","বিগত বছরগুলোতে প্লাবিত চর ও নিচু ইউনিয়ন এবং তাদের নিকটতম আশ্রয়কেন্দ্রের তালিকা প্রস্তুত রাখুন।"),
+           A("Ask the BWDB section officer about embankment weak points in the upazila.","উপজেলার বাঁধের দুর্বল স্থান সম্পর্কে BWDB-এর সংশ্লিষ্ট কর্মকর্তার কাছে খোঁজ নিন।")],
+      pio:[A("Check stock of dry food, water-purification tablets and tarpaulins against last season's use.","গত মৌসুমের ব্যবহারের তুলনায় শুকনো খাবার, পানি বিশুদ্ধকরণ ট্যাবলেট ও ত্রিপলের মজুত যাচাই করুন।"),
+           A("Verify shelter keys, toilets and water points at the listed flood shelters.","তালিকাভুক্ত বন্যা-আশ্রয়কেন্দ্রের চাবি, শৌচাগার ও পানির উৎস ঠিক আছে কি না যাচাই করুন।")],
+      dae:[A("Advise farmers to harvest mature crops in low fields if harvest is due within a few days (boro in the haor season, aus/jute in the monsoon).","কয়েক দিনের মধ্যে কাটার উপযোগী ফসল নিচু জমিতে থাকলে দ্রুত কাটার পরামর্শ দিন (হাওরে বোরো, বর্ষায় আউশ/পাট)।"),
+           A("Check that aman seedbed plans include a backup on high land.","আমন বীজতলার পরিকল্পনায় উঁচু জমিতে বিকল্প বীজতলা আছে কি না নিশ্চিত করুন।")] },
+  2:{ dc:[A("Put the DDMC on standby or convene it; ask FFWC/BWDB for the latest gauge forecast.","জেলা দুর্যোগ ব্যবস্থাপনা কমিটিকে প্রস্তুত রাখুন বা সভা আহ্বান করুন; FFWC/BWDB থেকে সর্বশেষ গেজ-পূর্বাভাস নিন।"),
+          A("Agree with UNOs on the trigger for evacuation announcements and the Bangla message to be used.","সরিয়ে নেওয়ার ঘোষণার শর্ত ও ব্যবহার্য বাংলা বার্তা নিয়ে ইউএনও-দের সঙ্গে ঐকমত্যে পৌঁছান।"),
+          A("Pre-position relief by upazila according to exposure; arrange boats if needed.","ঝুঁকি অনুযায়ী উপজেলাভিত্তিক ত্রাণ আগাম পৌঁছে দিন; প্রয়োজনে নৌকার ব্যবস্থা করুন।")],
+      uno:[A("Activate the Upazila DMC; brief union chairs; start miking in exposed char and low unions (livestock, documents, drinking water).","উপজেলা দুর্যোগ ব্যবস্থাপনা কমিটি সক্রিয় করুন; ইউনিয়ন চেয়ারম্যানদের অবহিত করুন; ঝুঁকিপূর্ণ চর ও নিচু ইউনিয়নে মাইকিং শুরু করুন (গবাদিপশু, কাগজপত্র, খাবার পানি)।"),
+           A("Get shelters ready to open; list households that need help to evacuate (older people, people with disabilities, pregnant women).","আশ্রয়কেন্দ্র খোলার প্রস্তুতি নিন; সরে যেতে সহায়তা লাগবে এমন পরিবারের তালিকা করুন (বয়স্ক, প্রতিবন্ধী ব্যক্তি, অন্তঃসত্ত্বা নারী)।")],
+      pio:[A("Move relief stock to the upazila points nearest the exposed unions; prepare distribution lists.","ঝুঁকিপূর্ণ ইউনিয়নের নিকটতম উপজেলা-পয়েন্টে ত্রাণ সরিয়ে রাখুন; বিতরণ-তালিকা প্রস্তুত করুন।"),
+           A("Arrange boats and fuel; confirm water and sanitation at shelters.","নৌকা ও জ্বালানির ব্যবস্থা করুন; আশ্রয়কেন্দ্রে পানি ও স্যানিটেশন নিশ্চিত করুন।")],
+      dae:[A("Urge immediate harvest of mature crops in exposed fields; move seed and fertiliser stocks to high ground.","ঝুঁকিপূর্ণ জমির পাকা ফসল অবিলম্বে কাটতে বলুন; বীজ ও সারের মজুত উঁচু স্থানে সরান।"),
+           A("With livestock officers, advise moving animals and fodder to high ground.","প্রাণিসম্পদ কর্মকর্তার সঙ্গে মিলে গবাদিপশু ও খাদ্য উঁচু স্থানে সরানোর পরামর্শ দিন।")] },
+  3:{ dc:[A("Treat as an emergency: DDMC in session, control room open, follow FFWC/BMD bulletins as they are issued.","জরুরি অবস্থা হিসেবে বিবেচনা করুন: জেলা দুর্যোগ ব্যবস্থাপনা কমিটির সভা চলমান রাখুন, নিয়ন্ত্রণকক্ষ চালু করুন, FFWC/BMD বুলেটিন প্রকাশমাত্র অনুসরণ করুন।"),
+          A("Order evacuation of identified char and low-lying areas under the local plan; request support under the Standing Orders on Disaster if needed.","স্থানীয় পরিকল্পনা অনুযায়ী চিহ্নিত চর ও নিচু এলাকা থেকে লোকজন সরিয়ে নেওয়ার নির্দেশ দিন; প্রয়োজনে দুর্যোগ বিষয়ক স্থায়ী আদেশাবলি অনুযায়ী সহায়তা চান।")],
+      uno:[A("Evacuate exposed households; open all shelters; run the control room 24 hours.","ঝুঁকিপূর্ণ পরিবারগুলোকে সরিয়ে নিন; সব আশ্রয়কেন্দ্র খুলুন; নিয়ন্ত্রণকক্ষ ২৪ ঘণ্টা চালু রাখুন।"),
+           A("Report damage and needs to DDM in the standard SOS and D-Form formats.","ক্ষয়ক্ষতি ও চাহিদার তথ্য নির্ধারিত এসওএস ও ডি-ফরমে দুর্যোগ ব্যবস্থাপনা অধিদপ্তরে পাঠান।")],
+      pio:[A("Distribute dry food, water and purification tablets; run boats for rescue; keep shelter occupancy up to date.","শুকনো খাবার, পানি ও বিশুদ্ধকরণ ট্যাবলেট বিতরণ করুন; উদ্ধারে নৌকা চালান; আশ্রয়কেন্দ্রে অবস্থানকারীর সংখ্যা হালনাগাদ রাখুন।")],
+      dae:[A("Record crop area at risk and inundated for the damage assessment.","ক্ষয়ক্ষতি নিরূপণের জন্য ঝুঁকিতে থাকা ও প্লাবিত ফসলি জমির পরিমাণ লিপিবদ্ধ করুন।"),
+           A("Plan seedling and seed support for re-planting once the water recedes.","পানি নামার পর পুনরায় রোপণের জন্য চারা ও বীজ সহায়তার পরিকল্পনা করুন।")] }
+};
+
+let data = null, source = null, sel = null, chart = null, rainChart = null;
+const hindcasts = {};          // district → /api/hindcast result (edge-cached)
+let catalogue = null;
+
+const lang = () => $("lang").value;
+const role = () => $("role").value;
+const lvInfo = k => (k==null? {en:"No data", bn:"তথ্য নেই", cls:"", k:null} : W.LEVELS[k]);
+const lvBadge = k => `<span class="ew-lv ${k==null?"lx":"l"+k}">${esc(lvInfo(k).en)}</span>`;
+
+/* ---------- plain-language driver sentences (en / bn) ---------- */
+function driverText(d, a, L){
+  const rt = a.thresholds && a.thresholds.rain ? a.thresholds.rain[d.key] : null;
+  const LV = lvInfo(d.level);
+  if(L==="bn"){
+    switch(d.kind){
+      case "river": return `মডেলকৃত প্রবাহ, ${d.bn}: ${fmtBn(d.value)} ঘনমিটার/সেকেন্ড — ২-বছরের বন্যা-প্রবাহের ${bnNum(d.ratioQ2.toFixed(2))} গুণ (${LV.bn})।`;
+      case "upstream": return `উজান: ${d.bn} — ${bnNum(d.validFor)} তারিখের জন্য ${fmtBn(d.value)} ঘনমিটার/সেকেন্ড প্রক্ষেপণ (২-বছরের প্রবাহের ${bnNum(d.ratioQ2.toFixed(2))} গুণ; পৌঁছাতে ${bnNum(d.lagDays)} দিন)।`;
+      case "ensemble": return `${d.bn.split(" · ")[0]} — GloFAS এনসেম্বল (${bnNum(d.members)}টি সদস্য, আগামী ১০ দিন): ২-বছরের প্রবাহ ছাড়াবে ${bnNum(pct(d.probQ2))}, ৫-বছরের ${bnNum(pct(d.probQ5))}, ২০-বছরের ${bnNum(pct(d.probQ20))} সদস্যে` + (d.expectedCrossing?`; অর্ধেক সদস্য ${bnNum(d.expectedCrossing)} তারিখে (${bnNum(d.leadDays)} দিন পর) ২-বছরের প্রবাহ ছাড়ায়।`:"।");
+      case "forecast": return `${d.bn.split(" · ")[0]} — GloFAS পূর্বাভাস (১০ দিন): সর্বোচ্চ ${fmtBn(d.value)} ঘনমিটার/সেকেন্ড (${LV.bn})।`;
+      case "rain": return `${d.bn}: ${fmtBn(d.value)} মিমি (সতর্ক-নজর সীমা ${fmtBn(rt&&rt.P95)} মিমি)।`;
+      case "rainForecast": return `${d.bn}: ${bnNum(d.startsOn||"")} থেকে ৩ দিনে ${fmtBn(d.value)} মিমি পূর্বাভাস (সীমা ${fmtBn(rt&&rt.P95)} মিমি)।`;
+    }
+  }
+  switch(d.kind){
+    case "river": return `Modelled flow, ${d.en}: ${fmt(d.value)} m³/s — ${d.ratioQ2.toFixed(2)}× the 2-year flood flow (${LV.en}).`;
+    case "upstream": return `Upstream: ${d.en} projects ${fmt(d.value)} m³/s for ${d.validFor} (${d.ratioQ2.toFixed(2)}× the 2-year flow; travel time ${d.lagDays} day${d.lagDays>1?"s":""}).`;
+    case "ensemble": return `${d.en.split(" · ")[0]} — GloFAS ensemble (${d.members} members, next 10 days): ${pct(d.probQ2)} exceed the 2-year flow, ${pct(d.probQ5)} the 5-year flow, ${pct(d.probQ20)} the 20-year flow` + (d.expectedCrossing?`; half the members pass the 2-year flow by ${d.expectedCrossing} (${d.leadDays} day${d.leadDays===1?"":"s"} ahead).`:".");
+    case "forecast": return `${d.en.split(" · ")[0]} — GloFAS forecast (10 days): peak ${fmt(d.value)} m³/s (${LV.en}).`;
+    case "rain": return `${d.en}: ${fmt(d.value)} mm (Watch threshold ${fmt(rt&&rt.P95)} mm).`;
+    case "rainForecast": return `${d.en}: ${fmt(d.value)} mm forecast over 3 days from ${d.startsOn} (Watch threshold ${fmt(rt&&rt.P95)} mm).`;
+  }
+  return d.en;
+}
+
+/* ---------- loading ---------- */
+async function loadAll(){
+  $("refreshBtn").disabled=true;
+  setStatus("Fetching today's assessment for the three pilot districts…");
+  let got=null, src=null;
+  if(location.protocol.startsWith("http")){
+    try{
+      const r=await fetch("/api/warn",{cache:"no-store"});
+      if(r.ok){ const j=await r.json(); if(j && j.districts && Object.values(j.districts).some(d=>!d.error)){ got=j.districts; src="server"; } }
+    }catch(e){}
+  }
+  if(!got){
+    if(!W){ setStatus("Early-warning engine (warn-engine.js) did not load. Reload the page.",true); $("refreshBtn").disabled=false; return; }
+    setStatus("Computing in your browser (the server endpoint was not reachable) — about 20 s…");
+    got={};
+    await Promise.all(Object.keys(W.DISTRICTS).map(async id=>{
+      try{ got[id]=await W.runLive(id, window.fetch); }catch(e){ got[id]={district:id, error:String(e.message||e)}; }
+    }));
+    src="browser";
+    if(Object.values(got).every(d=>d.error)){
+      const cached=LS.get("gbm-ew-last");
+      if(cached){ try{ const c=JSON.parse(cached); got=c.districts; src="saved copy of "+c.saved; }catch(e){} }
+    }
+  }
+  Object.values(got).forEach(d=>{ if(d && !d.error && d.level==null) d.error="no usable data today"; });
+  data=got; source=src;
+  if(src==="server"||src==="browser") LS.set("gbm-ew-last", JSON.stringify({saved:new Date().toISOString().slice(0,16).replace("T"," "), districts:got}));
+  const ok=Object.values(data).filter(d=>!d.error).length;
+  $("asOf").textContent = "as of "+(Object.values(data).find(d=>d.today)||{}).today+" · "+(src==="server"?"computed on the server":src==="browser"?"computed in this browser":src);
+  // focus the district with the highest level (so alerts and briefs point at the worst case)
+  if(!sel){
+    const remembered=LS.get("gbm-ew-district");
+    const worst=Object.values(data).filter(d=>!d.error).sort((a,b)=>(b.level||0)-(a.level||0))[0];
+    sel = (worst && worst.level>0) ? worst.district : (remembered && data[remembered] ? remembered : "sirajganj");
+  }
+  $("district").value=sel;
+  renderBoard(); renderSelected();
+  setStatus(ok===3?"Assessment complete for all three districts.":ok?`Assessment complete for ${ok} of 3 districts — see the board for the one that failed.`:"Could not compute the assessment: "+(Object.values(data)[0]||{}).error, ok===0);
+  $("refreshBtn").disabled=false;
+}
+
+function renderBoard(){
+  const ids=Object.keys(W ? W.DISTRICTS : {});
+  $("board").innerHTML = ids.map(id=>{
+    const a=data && data[id], D=W.DISTRICTS[id];
+    if(!a) return `<div class="ew-card"><h4>${esc(D.en)}</h4><div class="ew-skel" style="width:60%"></div><div class="ew-skel"></div></div>`;
+    if(a.error) return `<button class="ew-card ${sel===id?"sel":""}" data-d="${id}"><h4>${esc(D.en)} · ${esc(D.bn)}</h4>${lvBadge(null)}<div class="why">Could not load: ${esc(a.error)}</div></button>`;
+    const top=a.drivers[0];
+    const L=lang();
+    const why = top ? (L==="bn"?driverText(top,a,"bn"):driverText(top,a,"en")) : "";
+    const lead = a.level>0 && a.earliestLeadDays!=null ? ` · expected in ${a.earliestLeadDays} d` : "";
+    return `<button class="ew-card l${a.level} ${sel===id?"sel":""}" data-d="${id}" aria-pressed="${sel===id}">
+      <h4>${esc(D.en)} · ${esc(D.bn)}</h4>
+      <div>${lvBadge(a.level)} <span style="font-weight:600">${esc(W.LEVELS[a.level].bn)}</span></div>
+      <div class="why">${esc(why)}</div>
+      <div class="meta">${esc(D.targets.map(t=>t.en).join(" · "))}${esc(lead)}</div></button>`;
+  }).join("");
+  $("board").querySelectorAll(".ew-card[data-d]").forEach(b=>b.addEventListener("click",()=>{ sel=b.dataset.d; $("district").value=sel; LS.set("gbm-ew-district",sel); renderBoard(); renderSelected(); }));
+}
+
+function renderSelected(){
+  const a=data && data[sel]; const D=W.DISTRICTS[sel];
+  $("site").textContent = D.en+" district · "+D.bn+" জেলা — "+D.upazilas;
+  const rc=$("riskCat");
+  if(!a || a.error){ rc.textContent="—"; rc.className=""; $("drivers").innerHTML=`<tbody><tr><td>${a?esc(a.error):"Waiting…"}</td></tr></tbody>`; return; }
+  const LV=W.LEVELS[a.level];
+  rc.textContent=`${LV.en} · ${LV.bn}`; rc.className=LV.cls;
+  $("vLevel").textContent=LV.en; $("vLevelBn").textContent=LV.bn;
+  $("vLead").textContent = a.level>0 && a.earliestLeadDays!=null ? a.earliestLeadDays+" d" : (a.level>0?"now":"—");
+  const river=a.drivers.find(d=>d.kind==="river");
+  $("vRatio").textContent = river? river.ratioQ2.toFixed(2)+"×" : "—";
+  $("vRatioNote").textContent = river? `${river.en}: ${fmt(river.value)} m³/s` : "no river driver";
+  const ens=a.drivers.find(d=>d.kind==="ensemble");
+  $("vProb").textContent = ens? pct(ens.probQ5) : "—";
+  $("vProbNote").textContent = ens? `${ens.members} members · P(>2-yr) ${pct(ens.probQ2)}` : "ensemble not available today";
+  // drivers table
+  const L=lang();
+  $("drivers").innerHTML = "<thead><tr><th>Level</th><th>Driver · চালক</th></tr></thead><tbody>"+a.drivers.map(d=>
+    `<tr><td>${lvBadge(d.level)}</td><td>${L!=="bn"?esc(driverText(d,a,"en")):""}${L==="both"?"<br>":""}${L!=="en"?`<span style="color:var(--ink-soft)">${esc(driverText(d,a,"bn"))}</span>`:""}</td></tr>`).join("")+"</tbody>";
+  renderChecklist(); renderBulletin(); renderChart(a);
+  if(a.modelWarnings && a.modelWarnings.length) setStatus("Note: "+a.modelWarnings.join("; "));
+  loadTrack(sel);
+}
+
+function renderChecklist(){
+  const a=data && data[sel]; if(!a || a.error) return;
+  const items=(ACTIONS[a.level]||ACTIONS[0])[role()]||[];
+  const L=lang(), key=`gbm-ew-ticks-${sel}-${a.today}-${role()}`;
+  let ticks={}; try{ ticks=JSON.parse(LS.get(key)||"{}"); }catch(e){}
+  $("checkTag").textContent = `${ROLES[role()].en} · ${W.LEVELS[a.level].en}`;
+  $("checklist").innerHTML = items.map((it,i)=>`<li><input type="checkbox" id="ew-ck${i}" ${ticks[i]?"checked":""}><label for="ew-ck${i}">${L!=="bn"?esc(it.en):""}${L!=="en"?`<span class="bn">${esc(it.bn)}</span>`:""}</label></li>`).join("");
+  $("checklist").querySelectorAll("input").forEach((cb,i)=>cb.addEventListener("change",()=>{ ticks[i]=cb.checked; LS.set(key,JSON.stringify(ticks)); }));
+}
+
+function bulletinText(a, L){
+  const D=W.DISTRICTS[a.district], LV=W.LEVELS[a.level], r=role();
+  const items=(ACTIONS[a.level]||ACTIONS[0])[r]||[];
+  const top = a.level>0 ? a.drivers.filter(d=>d.level>0).slice(0,3) : a.drivers.slice(0,2);
+  if(L==="bn"){
+    return [
+      `${D.bn} জেলা — ${LV.bn} — ${bnNum(a.today)}`,
+      ``, `তথ্য কী বলছে`,
+      ...top.map(d=>"• "+driverText(d,a,"bn")),
+      ...(a.level>0 && a.earliestLeadDays!=null?[`সম্ভাব্য সূচনা: প্রায় ${bnNum(a.earliestLeadDays)} দিনের মধ্যে।`]:[]),
+      ``, `পরবর্তী করণীয় — ${ROLES[r].bn}`,
+      ...items.map((it,i)=>`${bnNum(i+1)}. ${it.bn}`),
+      ``, `পদক্ষেপের আগে যাচাই করুন`,
+      `আজকের FFWC বুলেটিন ও ${D.targets.map(t=>t.bn).join(", ")}-এর BWDB গেজ দেখে নিশ্চিত হোন। মডেলকৃত প্রবাহ (GloFAS) গেজের পানির উচ্চতা নয়।`,
+      ``, `জিবিএম অবজারভেটরির পাইলট সিদ্ধান্ত-সহায়তা। দাপ্তরিক সতর্কতা দেয় FFWC/BWDB ও BMD; সাড়াদানের সিদ্ধান্ত দুর্যোগ বিষয়ক স্থায়ী আদেশাবলি অনুযায়ী দুর্যোগ ব্যবস্থাপনা কমিটির।`
+    ].join("\n");
+  }
+  return [
+    `${D.en} district — ${LV.en.toUpperCase()} — ${a.today}`,
+    ``, `WHAT THE DATA SHOWS`,
+    ...top.map(d=>"• "+driverText(d,a,"en")),
+    ...(a.level>0 && a.earliestLeadDays!=null?[`Expected onset: within about ${a.earliestLeadDays} day${a.earliestLeadDays===1?"":"s"}.`]:[]),
+    ``, `NEXT STEPS — ${ROLES[r].en}`,
+    ...items.map((it,i)=>`${i+1}. ${it.en}`),
+    ``, `CHECK BEFORE ACTING`,
+    `Confirm against today's FFWC bulletin and the BWDB gauge for the ${D.targets.map(t=>t.en).join(" / ")}. Modelled flow (GloFAS) is not a gauge reading.`,
+    ``, `Pilot decision-support from the GBM Observatory. FFWC/BWDB and BMD are the official warning authorities; response decisions rest with the Disaster Management Committees under the Standing Orders on Disaster.`
+  ].join("\n");
+}
+function renderBulletin(){
+  const a=data && data[sel]; if(!a || a.error) return;
+  const L=lang();
+  $("bulletin").textContent = L==="en"?bulletinText(a,"en"):L==="bn"?bulletinText(a,"bn"):bulletinText(a,"en")+"\n\n"+"═".repeat(32)+"\n\n"+bulletinText(a,"bn");
+  $("aiTag").textContent="";
+}
+
+function renderChart(a){
+  if(!window.Chart) { $("chartNote").textContent="Chart library did not load — the numbers above are unaffected."; return; }
+  const rec=a.recent||{}; const t=rec.time||[];
+  const rp=a.thresholds.rp[rec.key]||{};
+  const ens=a.drivers.find(d=>d.kind==="ensemble" && d.key===rec.key);
+  const bandMap=new Map((ens&&ens.band||[]).map(b=>[b.date,b]));
+  const labels=t.map(s=>s===a.today?"today":s.slice(5));
+  const flat=v=>t.map(()=>v);
+  const ds=[
+    {label:"Modelled flow (GloFAS control)", data:rec.control, borderColor:"#14333F", backgroundColor:"#14333F", borderWidth:2, pointRadius:0, tension:.2},
+    {label:"Ensemble 90%", data:t.map(s=>bandMap.has(s)?bandMap.get(s).p90:null), borderColor:"rgba(31,78,95,.35)", backgroundColor:"rgba(31,78,95,.15)", pointRadius:0, borderWidth:1, fill:"+1"},
+    {label:"Ensemble 10%", data:t.map(s=>bandMap.has(s)?bandMap.get(s).p10:null), borderColor:"rgba(31,78,95,.35)", pointRadius:0, borderWidth:1, fill:false},
+    {label:"2-yr flow (Watch)", data:flat(rp.Q2), borderColor:"#8A5A00", borderDash:[6,4], pointRadius:0, borderWidth:1.5},
+    {label:"5-yr flow (Warning)", data:flat(rp.Q5), borderColor:"#B43A0B", borderDash:[6,4], pointRadius:0, borderWidth:1.5},
+    {label:"20-yr flow (Severe)", data:flat(rp.Q20), borderColor:"#9F1239", borderDash:[6,4], pointRadius:0, borderWidth:1.5}
+  ];
+  try{ if(chart) chart.destroy(); }catch(e){}
+  chart=new Chart($("chart"),{type:"line", data:{labels, datasets:ds},
+    options:{animation:false, responsive:true, maintainAspectRatio:false, interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{boxWidth:10,font:{size:10},filter:i=>i.text!=="Ensemble 10%"}}},
+      scales:{x:{ticks:{maxTicksLimit:10,font:{size:9}}}, y:{title:{display:true,text:"m³/s"},ticks:{font:{size:9}}}}}});
+  $("chartTag").textContent = rec.en ? rec.en+" · last 45 days + 15-day forecast" : "—";
+  // rain bars for the flash district
+  const flash = W.DISTRICTS[a.district].type==="flash" && rec.rainTime && rec.rainTime.length;
+  $("rainWrap").style.display = flash ? "" : "none";
+  try{ if(rainChart) rainChart.destroy(); }catch(e){}
+  if(flash){
+    const rt=a.thresholds.rain[rec.rainKey]||{};
+    rainChart=new Chart($("rainChart"),{type:"bar", data:{labels:rec.rainTime.map(s=>s===a.today?"today":s.slice(5)),
+      datasets:[{label:"Daily rain, Meghalaya slope (mm) — bars after today are forecast", data:rec.rain,
+        backgroundColor:rec.rainTime.map(s=>s>a.today?"rgba(31,78,95,.45)":"#1F4E5F")}]},
+      options:{animation:false, responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},
+        scales:{x:{ticks:{maxTicksLimit:11,font:{size:9}}}, y:{title:{display:true,text:"mm/day"},ticks:{font:{size:9}}}}}});
+    $("chartNote").textContent=`Dashed lines: 2-, 5- and 20-year flood flows of this point. Shaded band: 10–90% of the GloFAS ensemble. Flash ladder on the Meghalaya slope (3-day total): Watch ${fmt(rt.P95)} mm · Warning ${fmt(rt.P99)} mm · Severe ${fmt(rt.P997)} mm.`;
+  } else $("chartNote").textContent="Dashed lines: 2-, 5- and 20-year flood flows of this point (fitted to its own 20-year record). Shaded band: 10–90% range of the 50 GloFAS ensemble members.";
+}
+
+/* ---------- AI bulletin ---------- */
+$("aiBtn").addEventListener("click", async ()=>{
+  const a=data && data[sel]; if(!a || a.error){ $("aiTag").textContent="Load the assessment first."; return; }
+  if(!location.protocol.startsWith("http")){ $("aiTag").textContent="The AI bulletin needs the deployed site."; return; }
+  $("aiBtn").disabled=true; $("aiTag").textContent="Writing…";
+  const compact=JSON.parse(JSON.stringify(a)); delete compact.recent; (compact.drivers||[]).forEach(d=>delete d.band);
+  const items=(ACTIONS[a.level]||ACTIONS[0])[role()]||[];
+  try{
+    const r=await fetch("/api/analyst",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({mode:"bulletin", language:lang(), assessment:compact,
+        checklist:{office:ROLES[role()], level:W.LEVELS[a.level].en, items}})});
+    const j=await r.json().catch(()=>({}));
+    if(r.status===501){ $("aiTag").textContent="AI not configured on this deployment (ANTHROPIC_API_KEY) — the rule-based bulletin above stands."; }
+    else if(!r.ok){ $("aiTag").textContent="AI request failed ("+r.status+"): "+(j.error||"unknown")+". The rule-based bulletin stands."; }
+    else { $("bulletin").textContent=j.text||"(empty)"; $("aiTag").textContent="AI bulletin · "+(j.model||"Claude")+" · same data as the rule-based version"; }
+  }catch(e){ $("aiTag").textContent="AI request failed: "+e.message; }
+  $("aiBtn").disabled=false;
+});
+$("copyBtn").addEventListener("click", async ()=>{
+  const t=$("bulletin").textContent;
+  try{ await navigator.clipboard.writeText(t); $("aiTag").textContent="Copied."; }
+  catch(e){ const r=document.createRange(); r.selectNodeContents($("bulletin")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); $("aiTag").textContent="Selected — press Ctrl+C."; }
+});
+$("dlBtn").addEventListener("click", ()=>{
+  const a=data && data[sel]; const blob=new Blob([$("bulletin").textContent],{type:"text/plain;charset=utf-8"});
+  const u=URL.createObjectURL(blob); const el=document.createElement("a"); el.href=u; el.download=`gbm-ew-bulletin-${sel}-${a?a.today:"na"}.txt`;
+  document.body.appendChild(el); el.click(); el.remove(); setTimeout(()=>URL.revokeObjectURL(u),1000);
+});
+
+/* ---------- track record (hindcast, edge-cached) ---------- */
+async function getHindcast(id){
+  if(hindcasts[id]) return hindcasts[id];
+  const r=await fetch("/api/hindcast?district="+id);
+  if(!r.ok) throw new Error("hindcast "+r.status);
+  return (hindcasts[id]=await r.json());
+}
+async function getCatalogue(){
+  if(catalogue) return catalogue;
+  const r=await fetch("ew-events.json"); catalogue=await r.json(); return catalogue;
+}
+async function loadTrack(id){
+  if(!location.protocol.startsWith("http")){ $("track").innerHTML="<tbody><tr><td>The track record needs the deployed site (it runs the hindcast on the server).</td></tr></tbody>"; return; }
+  $("trackTag").textContent="loading…";
+  try{
+    const h=await getHindcast(id); if(sel!==id) return;
+    const s=h.scores;
+    const row=(name,v)=>`<tr><td>${name}</td><td class="num">${v.hits} of ${v.events}</td><td class="num">${v.medianLeadDays==null?"—":v.medianLeadDays+" d"}</td><td class="num">${v.unmatchedEpisodes} of ${v.episodes}</td><td class="num">${v.warnDaysPerYear==null?"—":v.warnDaysPerYear.toFixed(1)}</td></tr>`;
+    $("track").innerHTML=`<thead><tr><th>Level reached</th><th>Floods detected</th><th>Median warning before first report</th><th>Unconfirmed warning episodes</th><th>Days per year at level</th></tr></thead><tbody>
+      ${row(lvBadge(1)+" Watch or higher",s.watch)}${row(lvBadge(2)+" Warning or higher",s.warning)}${row(lvBadge(3)+" Severe",s.severe)}
+      ${row("Reference: “it's flood season” calendar (±30 days of the usual peak)",s.calendarReference)}</tbody>`;
+    const cat=await getCatalogue(); const ev=(cat.events[id]||[]);
+    const per=Object.fromEntries(s.watch.perEvent.map(e=>[e.id,e])), perW=Object.fromEntries(s.warning.perEvent.map(e=>[e.id,e]));
+    $("events").innerHTML=`<thead><tr><th>First report</th><th>Watch</th><th>Warning</th><th>What was reported</th></tr></thead><tbody>`+
+      ev.map(e=>{ const w=per[e.id], x=perW[e.id];
+        const cell=v=>!v?"<span style='color:var(--ink-soft)'>audit</span>":v.hit?`✓ ${v.lead>=0?v.lead+" d before":(-v.lead)+" d late"}`:"✗ missed";
+        return `<tr><td>${esc(e.date)}${e.quality==="B"?" <span title='District flooding reported; river reading from an adjacent gauge or not stated'>(B)</span>":""}</td><td>${cell(w)}</td><td>${cell(x)}</td><td>${esc(e.note)} · <a href="${esc(e.source)}" target="_blank" rel="noopener">source</a></td></tr>`; }).join("")+"</tbody>";
+    $("trackTag").textContent=`calibrated ${h.calibration.join("–")} · verified ${h.verification[0].slice(0,4)}–${h.verification[1].slice(0,4)} · ${h.rules}`;
+  }catch(e){ $("track").innerHTML=`<tbody><tr><td>Track record unavailable: ${esc(e.message)}</td></tr></tbody>`; $("trackTag").textContent="—"; }
+}
+
+/* ---------- drill mode: blind day-by-day replay of a documented flood ---------- */
+let drill=null;
+$("drillBtn").addEventListener("click", async ()=>{
+  const p=$("drillPanel"); const show=p.style.display==="none"; p.style.display=show?"":"none";
+  if(show){ try{ const cat=await getCatalogue();
+      $("drillEvent").innerHTML=Object.entries(cat.events).flatMap(([d,list])=>list.filter(e=>!e.audit).map(e=>`<option value="${d}|${e.id}">${esc(W.DISTRICTS[d].en)} · ${e.date.slice(0,4)} ${+e.date.slice(5,7)<6?"pre-monsoon":"monsoon"}</option>`)).join("");
+      p.scrollIntoView({behavior:"smooth",block:"start"});
+    }catch(e){ $("drillOut").textContent="Could not load scenarios: "+e.message; } }
+});
+$("drillStart").addEventListener("click", async ()=>{
+  const [d,id]=$("drillEvent").value.split("|"); if(!d) return;
+  $("drillOut").textContent="Loading the replay…";
+  try{
+    const h=await getHindcast(d); const cat=await getCatalogue(); const ev=cat.events[d].find(e=>e.id===id);
+    const start=W.util.addDays(ev.date,-10), end=W.util.addDays(ev.date,3);
+    const days=[]; for(let s=start;s<=end;s=W.util.addDays(s,1)){ const i=W.util.dayDiff(h.daily.start,s); days.push({date:s, level:h.daily.levels[i]==="-"?null:+h.daily.levels[i], by:{r:"river",u:"upstream",p:"rain"}[h.daily.by[i]]||null}); }
+    drill={d,ev,days,i:0,act:null,t0:Date.now()};
+    $("drillNext").disabled=false; $("drillAct").disabled=false;
+    drawDrill();
+  }catch(e){ $("drillOut").textContent="Replay unavailable: "+e.message+" (needs the deployed site)."; }
+});
+function drawDrill(final){
+  const {days,i,act,ev}=drill;
+  $("drillStrip").innerHTML=days.map((x,k)=>{
+    const shown=k<=i||final; const cls=shown?(x.level==null?"":"l"+x.level):"hidden";
+    return `<span class="${cls} ${act===k?"act":""} ${final&&x.date===ev.date?"flood":""}" title="${shown?x.date:"not yet revealed"}">D${k-10>=0?"+":""}${k-10}<b>${shown?(x.level==null?"–":["N","W","Wr","S"][x.level]):"?"}</b></span>`;
+  }).join("");
+  const cur=days[i];
+  if(!final) $("drillOut").textContent=`Day ${i+1} of ${days.length} — ${cur.date}\nSystem level: ${cur.level==null?"no data":W.LEVELS[cur.level].en+" · "+W.LEVELS[cur.level].bn}${cur.by&&cur.level>0?" (set by the "+cur.by+" driver)":""}\n\nWould you activate preparedness today? Press “I would activate…” or go to the next day.`;
+}
+$("drillNext").addEventListener("click", ()=>{ if(!drill) return; if(drill.i<drill.days.length-1){ drill.i++; drawDrill(); } else finishDrill(); });
+$("drillAct").addEventListener("click", ()=>{ if(!drill) return; drill.act=drill.i; finishDrill(); });
+function finishDrill(){
+  const {days,act,ev,d,t0}=drill; drawDrill(true);
+  $("drillNext").disabled=true; $("drillAct").disabled=true;
+  const firstSys=days.findIndex(x=>x.level>=1), floodIdx=10;
+  const yourLead = act==null?null:floodIdx-act;
+  const minutes=Math.round((Date.now()-t0)/60000);
+  $("drillOut").innerHTML=esc(`Revealed: the first dated report of the river above danger level was ${ev.date} (D+0).\n${ev.note}\n\n`+
+    `System: ${firstSys<0?"stayed below Watch in this window":"first reached Watch on D"+(firstSys-floodIdx)}.\n`+
+    `You: ${act==null?"did not activate":"activated on D"+(act-floodIdx)+" — "+(yourLead>0?yourLead+" day(s) before the first report":yourLead===0?"on the day of the first report":(-yourLead)+" day(s) after it")}.\n\n`)+
+    `<a href="${esc(ev.source)}" target="_blank" rel="noopener">Source of the flood report</a> · <button id="ew-drillLog">Log this drill (anonymous)</button> <span class="tag" id="ew-drillMsg"></span>`;
+  document.getElementById("ew-drillLog").addEventListener("click", ()=>sendFeedback({kind:"drill", district:d, levelShown:act==null?null:days[act].level,
+    drillScenario:ev.id, drillDecisionCorrect: act!=null && act<=floodIdx, minutesToDecision:minutes,
+    comment:`decision ${act==null?"none":"D"+(act-floodIdx)}; system first Watch ${firstSys<0?"none":"D"+(firstSys-floodIdx)}`}, "drillMsg"));
+}
+
+/* ---------- feedback ---------- */
+async function sendFeedback(extra, msgId){
+  const a=data && data[sel];
+  const rec=Object.assign({kind:"bulletin", district:sel, role:role(), levelShown:a&&!a.error?a.level:null, assessmentDate:a&&a.today,
+    clarity:$("fbClarity").value||null, usefulness:$("fbUseful").value||null, trust:$("fbTrust").value||null,
+    actedOn:$("fbActed").value||null, leadEnough:$("fbLead").value||null, observedFlood:$("fbObserved").value||null,
+    comment:$("fbComment").value, lang:lang()==="bn"?"bn":"en"}, extra||{});
+  const msg=$(msgId||"fbMsg"); msg.textContent="Sending…";
+  if(!location.protocol.startsWith("http")){ msg.textContent="Feedback needs the deployed site."; return; }
+  try{
+    const r=await fetch("/api/feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(rec)});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok && j.stored){ msg.textContent="Thank you — recorded anonymously."; if(!extra) $("fbComment").value=""; return; }
+    if(j.reason==="storage_not_configured"){
+      msg.innerHTML="Pilot storage isn't switched on yet. <button type='button' id='ew-fbSave'>Save my response as a file</button> and send it to the pilot coordinator.";
+      document.getElementById("ew-fbSave").addEventListener("click",()=>{ const b=new Blob([JSON.stringify(j.record||rec,null,1)],{type:"application/json"});
+        const u=URL.createObjectURL(b); const el=document.createElement("a"); el.href=u; el.download=`gbm-ew-${rec.kind}-${sel}-${Date.now()}.json`; document.body.appendChild(el); el.click(); el.remove(); });
+      return;
+    }
+    msg.textContent="Not recorded: "+(j.error||j.reason||r.status);
+  }catch(e){ msg.textContent="Not recorded: "+e.message; }
+}
+$("fbSend").addEventListener("click", ()=>sendFeedback(null,"fbMsg"));
+
+/* ---------- coordinator export ---------- */
+$("adminCsv").addEventListener("click", async ()=>{
+  const key=$("adminKey").value.trim(); const msg=$("adminMsg");
+  if(!key){ msg.textContent="Enter the admin key."; return; }
+  msg.textContent="Fetching…";
+  try{
+    const r=await fetch(`/api/pilot-data?type=${$("adminType").value}&format=csv`,{headers:{"x-admin-key":key}});
+    if(!r.ok){ const j=await r.json().catch(()=>({})); msg.textContent=`Refused (${r.status}): ${j.error||""}`; return; }
+    const b=await r.blob(); const u=URL.createObjectURL(b); const el=document.createElement("a"); el.href=u; el.download=`gbm-pilot-${$("adminType").value}.csv`;
+    document.body.appendChild(el); el.click(); el.remove(); msg.textContent="Downloaded."; $("adminKey").value="";
+  }catch(e){ msg.textContent="Failed: "+e.message; }
+});
+
+/* ---------- controls ---------- */
+$("district").addEventListener("change", ()=>{ sel=$("district").value; LS.set("gbm-ew-district",sel); if(data){ renderBoard(); renderSelected(); } });
+$("role").addEventListener("change", ()=>{ LS.set("gbm-ew-role",role()); renderChecklist(); renderBulletin(); });
+$("lang").addEventListener("change", ()=>{ LS.set("gbm-ew-lang",lang()); if(data){ renderBoard(); renderSelected(); } });
+$("refreshBtn").addEventListener("click", loadAll);
+(function restore(){ const r=LS.get("gbm-ew-role"), l=LS.get("gbm-ew-lang"); if(r && ROLES[r]) $("role").value=r; if(l) $("lang").value=l; })();
+
+let _inited=false, timer=null;
+return {
+  init(){ if(_inited) return; _inited=true;
+    if(!W){ setStatus("Early-warning engine (warn-engine.js) did not load — reload the page.",true); return; }
+    renderBoard(); loadAll(); clearInterval(timer); timer=setInterval(loadAll, 60*60*1000); },
+  invalidate(){ try{ if(chart) chart.resize(); if(rainChart) rainChart.resize(); }catch(e){} }
+};
+})();
+
+const STATIONS = { ew: M_ew, rb: M_rb, aq: M_aq, ch: M_ch, ix: M_ix, bd: M_bd, ef: M_ef, cs: M_cs, hw: M_hw, ol: M_ol, mn: M_mn, cc: M_cc };
 function showStation(k){
   document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active", p.id==="pane-"+k));
   document.querySelectorAll(".tab").forEach(t=>{

@@ -38,9 +38,9 @@
 
   const LEVELS = [
     { k: 0, key: "normal",  en: "Normal",  bn: "স্বাভাবিক", cls: "r-low",  color: "#0F766E" },
-    { k: 1, key: "watch",   en: "Watch",   bn: "সতর্ক নজর", cls: "r-mod",  color: "#B7791F" },
-    { k: 2, key: "warning", en: "Warning", bn: "প্রস্তুতি",  cls: "r-elev", color: "#C2410C" },
-    { k: 3, key: "severe",  en: "Severe",  bn: "জরুরি",     cls: "r-high", color: "#B91C1C" }
+    { k: 1, key: "watch",   en: "Watch",   bn: "সতর্ক নজর", cls: "r-mod",  color: "#8A5A00" },
+    { k: 2, key: "warning", en: "Warning", bn: "প্রস্তুতি",  cls: "r-elev", color: "#B43A0B" },
+    { k: 3, key: "severe",  en: "Severe",  bn: "জরুরি",     cls: "r-high", color: "#9F1239" }
   ];
 
   /* ---- pilot districts --------------------------------------------------------------
@@ -494,7 +494,7 @@
     const valid = drivers.filter(d => d.level != null);
     const level = valid.length ? Math.max(...valid.map(d => d.level)) : null;
     valid.sort((a, b) => b.level - a.level || (b.ratioQ2 || b.ratioP95 || 0) - (a.ratioQ2 || a.ratioP95 || 0));
-    const leads = valid.filter(d => d.level === level && isNum(d.leadDays)).map(d => d.leadDays);
+    const leads = level > 0 ? valid.filter(d => d.level === level && isNum(d.leadDays)).map(d => d.leadDays) : [];
     return {
       district: model.district, en: D.en, bn: D.bn, today, level, levelInfo: level == null ? null : LEVELS[level],
       drivers: valid, earliestLeadDays: leads.length ? Math.min(...leads) : null, ensemble: !!live.ensemble,
