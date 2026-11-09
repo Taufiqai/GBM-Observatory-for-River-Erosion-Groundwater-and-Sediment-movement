@@ -1,0 +1,11 @@
+{
+  "name": "gbm-observatory",
+  "private": true,
+  "description": "GBM Observatory dashboard, early-warning pilot engine and serverless functions",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.8.2"
+  }
+}

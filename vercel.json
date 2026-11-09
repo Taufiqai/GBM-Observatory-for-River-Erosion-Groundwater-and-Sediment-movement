@@ -1,4 +1,14 @@
 {
+  "functions": {
+    "api/analyst.js": { "maxDuration": 60 },
+    "api/warn.js": { "maxDuration": 60 },
+    "api/hindcast.js": { "maxDuration": 60 },
+    "api/cron-warn.js": { "maxDuration": 60 },
+    "api/pilot-data.js": { "maxDuration": 60 }
+  },
+  "crons": [
+    { "path": "/api/cron-warn", "schedule": "0 1 * * *" }
+  ],
   "headers": [
     {
       "source": "/sw.js",

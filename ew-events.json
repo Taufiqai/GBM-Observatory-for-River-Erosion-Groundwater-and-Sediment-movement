@@ -1,0 +1,206 @@
+{
+ "about": "GBM Observatory Early Warning pilot — documented flood events used to verify the warning rules. Each event is the FIRST date for which a dated public source reports the river at or above the BWDB danger level in that district (quality A), or reports district flooding where the river reading is from an adjacent gauge or not stated (quality B). 'date' is therefore often later than the true crossing; lead times measured against it are upper bounds. Season coverage searched: 2016–2024. Absence of an event in a year is NOT evidence that no flood occurred — the catalogue is incomplete, so unmatched warnings are reported as an upper bound on false alarms, not as false alarms.",
+ "compiled": "2026-11-09",
+ "seasons": [
+  2016,
+  2024
+ ],
+ "events": {
+  "sirajganj": [
+   {
+    "id": "SIR-2016-07",
+    "date": "2016-07-24",
+    "quality": "B",
+    "note": "Jamuna 18–20 cm above danger level at Bogura (adjacent upstream); 40 unions of Sirajganj cut off",
+    "source": "https://theindependentbd.com/home/printnews/52587"
+   },
+   {
+    "id": "SIR-2017-08",
+    "date": "2017-08-13",
+    "quality": "A",
+    "note": "Jamuna 50 cm above danger level at Sirajganj",
+    "source": "https://theindependentbd.com/home/printnews/109283"
+   },
+   {
+    "id": "SIR-2019-07",
+    "date": "2019-07-15",
+    "quality": "A",
+    "note": "Jamuna above danger level at Sirajganj (BSS/FFWC bulletin of 15 July); 91 cm above on 18 July",
+    "source": "https://wp.bssnews.net/?p=242548"
+   },
+   {
+    "id": "SIR-2020-06",
+    "date": "2020-06-30",
+    "quality": "A",
+    "note": "Jamuna ~45 cm above at Sirajganj hard point, 70 cm at Kazipur",
+    "source": "https://today.thefinancialexpress.com.bd/print/new-areas-flooded-as-jamuna-continues-to-swell-1593542821"
+   },
+   {
+    "id": "SIR-2021-08",
+    "date": "2021-08-31",
+    "quality": "A",
+    "note": "Jamuna 6 cm above at Sirajganj hard point, 11 cm at Kazipur (report date ±2 days)",
+    "source": "https://www.thedailystar.net/environment/climate-crisis/natural-disaster/news/jamuna-water-crosses-danger-level-60000-people-stranded-bogura-sirajganj-2161466"
+   },
+   {
+    "id": "SIR-2022-06",
+    "date": "2022-06-18",
+    "quality": "A",
+    "note": "Jamuna crossed danger level at Kazipur 17–18 June; 34 cm above at Sirajganj on 20 June",
+    "source": "https://www.bssnews.net/news/67197"
+   },
+   {
+    "id": "SIR-2023-08",
+    "date": "2023-08-31",
+    "quality": "A",
+    "note": "Jamuna 3 cm above at Sirajganj hard point (12.93 m); print edition of 1 Sep 2023",
+    "source": "https://www.thedailystar.net/environment/climate-crisis/natural-disaster/news/jamuna-crosses-danger-level-sirajganj-3408291"
+   },
+   {
+    "id": "SIR-2024-07",
+    "date": "2024-07-05",
+    "quality": "A",
+    "note": "Jamuna 58 cm above danger level at Sirajganj",
+    "source": "https://en.banglaoutlook.org/country/234167"
+   }
+  ],
+  "kurigram": [
+   {
+    "id": "KUR-2016-07",
+    "date": "2016-07-24",
+    "quality": "B",
+    "note": "Four rivers rising; ~2 million people in 40 unions affected (no gauge reading stated)",
+    "source": "https://theindependentbd.com/home/printnews/52587"
+   },
+   {
+    "id": "KUR-2017-08",
+    "date": "2017-08-13",
+    "quality": "A",
+    "note": "Brahmaputra 25 cm above at Chilmari; Dharla 112 cm above at Kurigram",
+    "source": "https://theindependentbd.com/home/printnews/109283"
+   },
+   {
+    "id": "KUR-2018-07",
+    "date": "2018-07-06",
+    "quality": "A",
+    "note": "Dharla 28 cm above danger level",
+    "source": "https://www.thedailystar.net/country/50000-marooned-kurigram-flood-situation-worsens-bangladesh-1600981"
+   },
+   {
+    "id": "KUR-2019-07",
+    "date": "2019-07-15",
+    "quality": "A",
+    "note": "Brahmaputra 16 cm above at Chilmari, Dharla 5 cm above (BSS/FFWC bulletin of 15 July); 125/117 cm by 16 July",
+    "source": "https://wp.bssnews.net/?p=242548"
+   },
+   {
+    "id": "KUR-2020-06",
+    "date": "2020-06-30",
+    "quality": "A",
+    "note": "Brahmaputra 71 cm above at Chilmari; Dharla 61 cm above at Bridge Point",
+    "source": "https://thefinancialexpress.com.bd/print/kuriigram-flood-situation-deteriorates-further-1593503923"
+   },
+   {
+    "id": "KUR-2021-08",
+    "date": "2021-08-28",
+    "quality": "A",
+    "note": "Dharla and Brahmaputra (Chilmari) above danger level",
+    "source": "https://today.thefinancialexpress.com.bd/print/water-levels-of-kurigram-rivers-rise-marooning-20000-people-1630081931"
+   },
+   {
+    "id": "KUR-2022-06",
+    "date": "2022-06-17",
+    "quality": "A",
+    "note": "Brahmaputra 5 cm above at Chilmari, Dharla 9 cm above; 52/44 cm by 20 June",
+    "source": "https://www.bssnews.net/news/67041"
+   },
+   {
+    "id": "KUR-2024-07",
+    "date": "2024-07-04",
+    "quality": "A",
+    "note": "Brahmaputra 78 cm above danger level at Chilmari (Thursday 4 July BWDB reading)",
+    "source": "https://en.prothomalo.com/bangladesh/local-news/z1b5mjkm52"
+   }
+  ],
+  "sunamganj": [
+   {
+    "id": "SUN-2016-07",
+    "date": "2016-07-19",
+    "quality": "A",
+    "note": "Surma 52 cm above danger level at Ghagot point, Sunamganj",
+    "source": "https://www.thedailystar.net/node/1256857"
+   },
+   {
+    "id": "SUN-2017-04",
+    "date": "2017-03-29",
+    "until": "2017-04-12",
+    "quality": "B",
+    "note": "Pre-monsoon haor flash flood: 89,790 ha of boro lost across 22 of 42 haors (river reading not stated)",
+    "source": "https://theindependentbd.com/arcprint/details/89749/2017-04-12"
+   },
+   {
+    "id": "SUN-2018-07",
+    "date": "2018-07-03",
+    "quality": "A",
+    "note": "Surma ~48 cm above danger level at Shologhar point (article update date)",
+    "source": "https://www.dhakatribune.com/bangladesh/nation/149528/floods-feared-as-surma-flows-above-danger-level-in"
+   },
+   {
+    "id": "SUN-2019-07",
+    "date": "2019-07-10",
+    "quality": "A",
+    "note": "Surma 41 cm above danger level at Sunamganj",
+    "source": "https://www.thedailystar.net/city/news/excessive-rainfall-triggers-flash-flood-sunamganj-1769575"
+   },
+   {
+    "id": "SUN-2020-06",
+    "date": "2020-06-25",
+    "quality": "A",
+    "note": "First 2020 flood 25–29 June; Surma 46 cm above at 9 am on 27 June",
+    "source": "https://www.thefinancialexpress.com.bd/print/flash-floods-inundate-parts-of-sunamganj-town-1593255005"
+   },
+   {
+    "id": "SUN-2020-07",
+    "date": "2020-07-09",
+    "quality": "A",
+    "note": "Second 2020 wave: Surma back above danger level at Sunamganj (52 cm on 11 July, 42 cm on 12 July)",
+    "source": "https://www.tbsnews.net/node/105280"
+   },
+   {
+    "id": "SUN-2022-04",
+    "date": "2022-04-17",
+    "quality": "B",
+    "note": "Haor embankment overtopped at Gurmar haor, Tahirpur (pre-monsoon flash-flood season; no danger-level reading)",
+    "source": "https://today.thefinancialexpress.com.bd/print/water-overflows-haor-embankment-1650219556"
+   },
+   {
+    "id": "SUN-2022-05",
+    "date": "2022-05-17",
+    "quality": "A",
+    "note": "Surma above danger level at Sholaghar point (Tuesday 17 May reading); 152 cm above at Chhatak",
+    "source": "https://thefinancialexpress.com.bd/national/country/sylhet-city-under-water-as-flood-situation-worsens-1652846657"
+   },
+   {
+    "id": "SUN-2022-06",
+    "date": "2022-06-13",
+    "quality": "A",
+    "note": "Surma 11 cm above on 13 June; 120 cm above on 17 June",
+    "source": "https://today.thefinancialexpress.com.bd/print/rivers-in-haor-areas-flowing-above-danger-level-1655137375"
+   },
+   {
+    "id": "SUN-2024-06",
+    "date": "2024-06-17",
+    "quality": "A",
+    "note": "Surma 42 cm above at Shologhar on 19 June; all rivers above 'for the last couple of days'",
+    "source": "https://www.tbsnews.net/bangladesh/flood-situation-worsens-sunamganj-several-thousand-marooned-879811"
+   },
+   {
+    "id": "SUN-2024-07",
+    "date": "2024-07-03",
+    "quality": "B",
+    "note": "Sylhet and Sunamganj under a fresh (third) 2024 flood wave, report of 4 July; no Surma-at-Sunamganj reading stated",
+    "source": "https://today.thefinancialexpress.com.bd/print/sylhet-sunamganj-reel-under-floods-1720026368"
+   }
+  ]
+ }
+}
