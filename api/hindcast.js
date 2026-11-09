@@ -27,13 +27,28 @@ module.exports = async (req, res) => {
     const t0 = Date.now();
     const inputs = await W.fetchHistory(id, b0 + "-01-01", to, fetch);
     const model = W.calibrate(id, inputs, b0, b1);
+    // Optional, clearly labelled POST-HOC sensitivity runs (not the pre-registered rules):
+    //   watchT=1.5  → Watch at the 1.5-year flow instead of the 2-year flow
+    //   rainWatchP=0.97 → rain Watch at the 97th instead of the 95th percentile
+    const sensitivity = {};
+    const wT = parseFloat(req.query.watchT);
+    if (wT > 1.05 && wT < 2) {
+      for (const rp of Object.values(model.rp)) rp.Q2 = rp.mu - rp.beta * Math.log(-Math.log(1 - 1 / wT));
+      sensitivity.watchT = wT;
+    }
+    const rP = parseFloat(req.query.rainWatchP);
+    if (rP > 0.9 && rP < 0.99) {
+      for (const r of W.DISTRICTS[id].rain) { const rt = W.rainThresholds(inputs.dates, inputs.series[r.key], b0, b1, 3, rP); if (rt) model.rain[r.key] = rt; }
+      sensitivity.rainWatchP = rP;
+    }
     const daily = W.hindcast(model, inputs, from, to);
     const events = (CATALOGUE.events[id] || []);
     const eventsA = events.filter(e => e.quality === "A");
     const ref = W.calendarReference(model, daily.map(d => d.date));
     const score = (dl, ev, lvl) => { const v = W.verify(dl, ev, { minLevel: lvl }); delete v.episodeList; return v; };
     const result = {
-      district: id, engine: W.VERSION, rules: W.RULES.id,
+      district: id, engine: W.VERSION, rules: Object.keys(sensitivity).length ? W.RULES.id + " + POST-HOC sensitivity " + JSON.stringify(sensitivity) : W.RULES.id,
+      sensitivity: Object.keys(sensitivity).length ? sensitivity : null,
       calibration: [b0, b1], verification: [from, to],
       thresholds: { rp: model.rp, rain: model.rain, links: model.links },
       modelWarnings: model.warnings,
@@ -48,7 +63,8 @@ module.exports = async (req, res) => {
       },
       episodes: { watch: W.verify(daily, events, { minLevel: 1 }).episodeList, warning: W.verify(daily, events, { minLevel: 2 }).episodeList },
       triggers: daily.reduce((o, d) => { if (d.by) o[d.by] = (o[d.by] || 0) + 1; return o; }, {}),
-      daily: { start: daily.length ? daily[0].date : null, levels: daily.map(d => (d.level == null ? "-" : String(d.level))).join("") },
+      daily: { start: daily.length ? daily[0].date : null, levels: daily.map(d => (d.level == null ? "-" : String(d.level))).join(""),
+        by: daily.map(d => ({ river: "r", upstream: "u", rain: "p" }[d.by] || ".")).join("") },
       seconds: (Date.now() - t0) / 1000
     };
     res.setHeader("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=604800");

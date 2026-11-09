@@ -150,13 +150,13 @@
       peakDoyMedian: Math.round(median(doys))
     };
   }
-  function rainThresholds(dates, v, y0, y1, win) {
+  function rainThresholds(dates, v, y0, y1, win, pWatch) {
     const r = rollingSum(v, win || RULES.rainWindowDays);
     const pool = [];
     for (let i = 0; i < dates.length; i++) { const y = yearOf(dates[i]); if (y >= y0 && y <= y1 && isNum(r[i])) pool.push(r[i]); }
     if (pool.length < 365 * 5) return null;
     pool.sort((a, b) => a - b);
-    return { P95: quantile(pool, 0.95), P99: quantile(pool, 0.99), P997: quantile(pool, 0.997), n: pool.length, window: win || RULES.rainWindowDays };
+    return { P95: quantile(pool, pWatch || 0.95), P99: quantile(pool, 0.99), P997: quantile(pool, 0.997), n: pool.length, window: win || RULES.rainWindowDays };
   }
   /* upstream → downstream link: choose lag L in [1,7] maximising r of ln(up_t) vs ln(down_{t+L})
      over monsoon months of the calibration years, then OLS in log space. */
@@ -281,12 +281,15 @@
     }
     return eps;
   }
-  /* events: [{id, date (first documented exceedance), until?, quality}] */
+  /* events: [{id, date (first documented exceedance), until? (last documented), quality, audit?}]
+     audit events (found by checking unmatched warnings afterwards) only re-classify warning
+     episodes; they never count toward detection, so the audit cannot inflate the hit rate. */
   function verify(daily, events, opt) {
     const o = Object.assign({ minLevel: 1, pre: 7, post: 2, matchPre: 2, matchPost: 7, mergeGap: 5, leadCap: 21 }, opt || {});
     const byDate = new Map(daily.map(d => [d.date, d]));
     const first = daily.length ? daily[0].date : null, last = daily.length ? daily[daily.length - 1].date : null;
-    const evIn = events.filter(e => first && e.date >= first && e.date <= last);
+    const evAll = events.filter(e => first && e.date >= first && e.date <= last);
+    const evIn = evAll.filter(e => !e.audit);
     const eps = episodes(daily, o.minLevel, o.mergeGap);
     const per = evIn.map(e => {
       const until = e.until || e.date;
@@ -305,7 +308,10 @@
       }
       return { id: e.id, date: e.date, quality: e.quality, hit: !!firstOn, firstOn, lead };
     });
-    const matched = eps.map(p => evIn.some(e => e.date >= addDays(p.start, -o.matchPre) && e.date <= addDays(p.end, o.matchPost)));
+    // an episode is matched when the documented flood period [date, until] overlaps [start − 2 d, end + 7 d]
+    const matchedBy = eps.map(p => evAll.filter(e => (e.until || e.date) >= addDays(p.start, -o.matchPre) && e.date <= addDays(p.end, o.matchPost)));
+    const matched = matchedBy.map(m => m.length > 0);
+    const byAuditOnly = matchedBy.filter(m => m.length && m.every(e => e.audit)).length;
     const nYears = first ? (yearOf(last) - yearOf(first) + 1) : 0;
     const hits = per.filter(x => x.hit);
     const leads = hits.map(x => x.lead).filter(isNum);
@@ -313,13 +319,13 @@
     return {
       minLevel: o.minLevel, events: evIn.length, hits: hits.length, misses: evIn.length - hits.length,
       pod: evIn.length ? hits.length / evIn.length : null,
-      episodes: eps.length, unmatchedEpisodes: matched.filter(x => !x).length,
+      episodes: eps.length, unmatchedEpisodes: matched.filter(x => !x).length, matchedByAuditOnly: byAuditOnly,
       farUpperBound: eps.length ? matched.filter(x => !x).length / eps.length : null,
       medianLeadDays: leads.length ? median(leads) : null,
       leadDays: leads,
       warnDaysPerYear: nYears ? warnDays / nYears : null,
       perEvent: per,
-      episodeList: eps.map((p, k) => Object.assign({ matched: matched[k] }, p))
+      episodeList: eps.map((p, k) => Object.assign({ matched: matched[k], by: matchedBy[k].map(e => e.id) }, p))
     };
   }
 

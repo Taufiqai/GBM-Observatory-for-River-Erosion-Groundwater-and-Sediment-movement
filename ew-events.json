@@ -1,5 +1,5 @@
 {
- "about": "GBM Observatory Early Warning pilot — documented flood events used to verify the warning rules. Each event is the FIRST date for which a dated public source reports the river at or above the BWDB danger level in that district (quality A), or reports district flooding where the river reading is from an adjacent gauge or not stated (quality B). 'date' is therefore often later than the true crossing; lead times measured against it are upper bounds. Season coverage searched: 2016–2024. Absence of an event in a year is NOT evidence that no flood occurred — the catalogue is incomplete, so unmatched warnings are reported as an upper bound on false alarms, not as false alarms.",
+ "about": "GBM Observatory Early Warning pilot — documented flood events used to verify the warning rules. Each event is the FIRST date for which a dated public source reports the river at or above the BWDB danger level in that district (quality A), or reports district flooding where the river reading is from an adjacent gauge or not stated (quality B). 'date' is therefore often later than the true crossing; lead times measured against it are upper bounds. Season coverage searched: 2016–2024. Absence of an event in a year is NOT evidence that no flood occurred — the catalogue is incomplete, so unmatched warnings are reported as an upper bound on false alarms, not as false alarms. 'until' is the last date the same source(s) document the river above danger level. Events marked audit:true were found AFTER the hindcast, by checking every unmatched warning episode on the main rivers and a systematic sample of Sunamganj episodes against dated reports; they are used only to re-classify those warning episodes, never to raise the detection rate.",
  "compiled": "2026-11-09",
  "seasons": [
   2016,
@@ -24,6 +24,7 @@
    {
     "id": "SIR-2019-07",
     "date": "2019-07-15",
+    "until": "2019-07-18",
     "quality": "A",
     "note": "Jamuna above danger level at Sirajganj (BSS/FFWC bulletin of 15 July); 91 cm above on 18 July",
     "source": "https://wp.bssnews.net/?p=242548"
@@ -36,6 +37,14 @@
     "source": "https://today.thefinancialexpress.com.bd/print/new-areas-flooded-as-jamuna-continues-to-swell-1593542821"
    },
    {
+    "id": "SIR-2020-07a",
+    "date": "2020-07-23",
+    "quality": "A",
+    "audit": true,
+    "note": "Jamuna 66 cm above danger level at Sirajganj (BSS, 9 am 23 July 2020)",
+    "source": "https://wp.bssnews.net/?p=427109"
+   },
+   {
     "id": "SIR-2021-08",
     "date": "2021-08-31",
     "quality": "A",
@@ -45,6 +54,7 @@
    {
     "id": "SIR-2022-06",
     "date": "2022-06-18",
+    "until": "2022-06-20",
     "quality": "A",
     "note": "Jamuna crossed danger level at Kazipur 17–18 June; 34 cm above at Sirajganj on 20 June",
     "source": "https://www.bssnews.net/news/67197"
@@ -73,6 +83,14 @@
     "source": "https://theindependentbd.com/home/printnews/52587"
    },
    {
+    "id": "KUR-2017-07a",
+    "date": "2017-07-12",
+    "quality": "A",
+    "audit": true,
+    "note": "Brahmaputra 34 cm above at Chilmari; Dharla 25 cm above at Bridge point (noon 12 July 2017)",
+    "source": "https://theindependentbd.com/arcprint/details/103726/2017-07-13"
+   },
+   {
     "id": "KUR-2017-08",
     "date": "2017-08-13",
     "quality": "A",
@@ -89,6 +107,7 @@
    {
     "id": "KUR-2019-07",
     "date": "2019-07-15",
+    "until": "2019-07-16",
     "quality": "A",
     "note": "Brahmaputra 16 cm above at Chilmari, Dharla 5 cm above (BSS/FFWC bulletin of 15 July); 125/117 cm by 16 July",
     "source": "https://wp.bssnews.net/?p=242548"
@@ -101,6 +120,14 @@
     "source": "https://thefinancialexpress.com.bd/print/kuriigram-flood-situation-deteriorates-further-1593503923"
    },
    {
+    "id": "KUR-2020-07a",
+    "date": "2020-07-23",
+    "quality": "A",
+    "audit": true,
+    "note": "Brahmaputra 62 cm above at Chilmari, Dharla 90 cm above (BSS, 23 July 2020)",
+    "source": "https://wp.bssnews.net/?p=427109"
+   },
+   {
     "id": "KUR-2021-08",
     "date": "2021-08-28",
     "quality": "A",
@@ -108,11 +135,28 @@
     "source": "https://today.thefinancialexpress.com.bd/print/water-levels-of-kurigram-rivers-rise-marooning-20000-people-1630081931"
    },
    {
+    "id": "KUR-2021-10a",
+    "date": "2021-10-20",
+    "quality": "B",
+    "audit": true,
+    "note": "Teesta 60–70 cm above danger level at Dalia, Lalmonirhat (adjacent district upstream)",
+    "source": "https://en.shampratikdeshkal.com/print/211023763"
+   },
+   {
     "id": "KUR-2022-06",
     "date": "2022-06-17",
+    "until": "2022-06-20",
     "quality": "A",
     "note": "Brahmaputra 5 cm above at Chilmari, Dharla 9 cm above; 52/44 cm by 20 June",
     "source": "https://www.bssnews.net/news/67041"
+   },
+   {
+    "id": "KUR-2024-06a",
+    "date": "2024-06-22",
+    "quality": "B",
+    "audit": true,
+    "note": "Teesta 3 cm above at Kaunia (Sat 22 June 2024); other Kurigram rivers falling below danger level",
+    "source": "https://today.thefinancialexpress.com.bd/print/1320-hectares-of-farmland-under-floodwater-in-kurigram-1719158458"
    },
    {
     "id": "KUR-2024-07",
@@ -155,6 +199,7 @@
    {
     "id": "SUN-2020-06",
     "date": "2020-06-25",
+    "until": "2020-06-29",
     "quality": "A",
     "note": "First 2020 flood 25–29 June; Surma 46 cm above at 9 am on 27 June",
     "source": "https://www.thefinancialexpress.com.bd/print/flash-floods-inundate-parts-of-sunamganj-town-1593255005"
@@ -162,9 +207,18 @@
    {
     "id": "SUN-2020-07",
     "date": "2020-07-09",
+    "until": "2020-07-12",
     "quality": "A",
     "note": "Second 2020 wave: Surma back above danger level at Sunamganj (52 cm on 11 July, 42 cm on 12 July)",
     "source": "https://www.tbsnews.net/node/105280"
+   },
+   {
+    "id": "SUN-2020-07b",
+    "date": "2020-07-22",
+    "quality": "A",
+    "audit": true,
+    "note": "Surma 30 cm above at Sholaghar, 164 cm above at Chhatak (9 am 22 July 2020)",
+    "source": "https://wp.bssnews.net/?p=426538"
    },
    {
     "id": "SUN-2022-04",
@@ -183,13 +237,23 @@
    {
     "id": "SUN-2022-06",
     "date": "2022-06-13",
+    "until": "2022-06-17",
     "quality": "A",
     "note": "Surma 11 cm above on 13 June; 120 cm above on 17 June",
     "source": "https://today.thefinancialexpress.com.bd/print/rivers-in-haor-areas-flowing-above-danger-level-1655137375"
    },
    {
+    "id": "SUN-2023-07a",
+    "date": "2023-07-02",
+    "quality": "A",
+    "audit": true,
+    "note": "Surma 6 cm above danger level at Sunamganj after 322 mm of rain in 24 h",
+    "source": "https://en.prothomalo.com/bangladesh/local-news/p3rf8qynyz"
+   },
+   {
     "id": "SUN-2024-06",
     "date": "2024-06-17",
+    "until": "2024-06-19",
     "quality": "A",
     "note": "Surma 42 cm above at Shologhar on 19 June; all rivers above 'for the last couple of days'",
     "source": "https://www.tbsnews.net/bangladesh/flood-situation-worsens-sunamganj-several-thousand-marooned-879811"
@@ -200,6 +264,98 @@
     "quality": "B",
     "note": "Sylhet and Sunamganj under a fresh (third) 2024 flood wave, report of 4 July; no Surma-at-Sunamganj reading stated",
     "source": "https://today.thefinancialexpress.com.bd/print/sylhet-sunamganj-reel-under-floods-1720026368"
+   }
+  ]
+ },
+ "audit": {
+  "method": "Riverine districts: every warning episode with no catalogued event was searched (district + river + month + 'danger level'). Sunamganj: systematic sample of every 6th unmatched Watch episode starting with the 3rd (6 of 37). One web search per episode, plus fetches of candidate reports. 'not found' means no dated report was found, not that no flood happened.",
+  "date": "2026-11-09",
+  "searched": [
+   {
+    "district": "sirajganj",
+    "episode": "2017-07-10/2017-07-12",
+    "result": "not found (Chilmari, upstream in Kurigram, was 34 cm above on 12 Jul 2017; no Sirajganj reading)"
+   },
+   {
+    "district": "sirajganj",
+    "episode": "2020-07-10/2020-07-24",
+    "result": "confirmed",
+    "event": "SIR-2020-07a"
+   },
+   {
+    "district": "kurigram",
+    "episode": "2017-07-09/2017-07-12",
+    "result": "confirmed",
+    "event": "KUR-2017-07a"
+   },
+   {
+    "district": "kurigram",
+    "episode": "2020-07-10/2020-07-23",
+    "result": "confirmed",
+    "event": "KUR-2020-07a"
+   },
+   {
+    "district": "kurigram",
+    "episode": "2021-10-20/2021-10-20",
+    "result": "confirmed in adjacent district only (Teesta 60–70 cm above at Dalia, Lalmonirhat)",
+    "event": "KUR-2021-10a"
+   },
+   {
+    "district": "kurigram",
+    "episode": "2023-06-20/2023-06-21",
+    "result": "refuted: BWDB Kurigram reported all rivers below danger level at noon on 23 Jun 2023 (Dudhkumar 4 cm below)",
+    "source": "https://today.thefinancialexpress.com.bd/print/thousands-marooned-as-flood-hits-kurigram-1687539981"
+   },
+   {
+    "district": "kurigram",
+    "episode": "2024-06-19/2024-06-20",
+    "result": "confirmed (Teesta at Kaunia 3 cm above on 22 Jun 2024; Dharla, Dudhkumar, Brahmaputra 'falling below danger level')",
+    "event": "KUR-2024-06a"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2016-06-12/2016-06-14",
+    "result": "not found"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2017-07-01/2017-07-27",
+    "result": "not found"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2019-06-04/2019-06-06",
+    "result": "not found"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2020-07-20/2020-07-23",
+    "result": "confirmed",
+    "event": "SUN-2020-07b"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2021-06-29/2021-07-04",
+    "result": "not found"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2023-10-06/2023-10-08",
+    "result": "not found"
+   },
+   {
+    "district": "sunamganj",
+    "episode": "2023-06-16/2023-07-07",
+    "result": "confirmed incidentally (not in the sample)",
+    "event": "SUN-2023-07a"
+   }
+  ],
+  "outOfScope": [
+   {
+    "district": "kurigram",
+    "date": "2023-08-26",
+    "note": "Teesta 41 cm above danger level at Kaunia with no warning: the Teesta is not modelled by the pilot (only Brahmaputra and Dharla). Scope gap, not scored.",
+    "source": "https://www.tbsnews.net/node/689038"
    }
   ]
  }

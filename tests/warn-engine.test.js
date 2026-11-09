@@ -198,3 +198,25 @@ test("assessLive reads the GloFAS ensemble and forecast rain", () => {
   assert.equal(a.levelInfo.en, "Warning");
   assert.equal(a.drivers[0].level, 2, "drivers sorted with the highest level first");
 });
+
+test("verify: documented ranges match later episodes; audit events never add hits", () => {
+  const dates = days("2022-06-01", "2022-07-31");
+  const lv = new Map();
+  const on = (a, b, l) => { for (let s = a; s <= b; s = addDays(s, 1)) lv.set(s, l); };
+  on("2022-06-16", "2022-06-19", 2);   // starts 3 days after the first documented date, inside the documented range
+  on("2022-07-20", "2022-07-22", 1);   // later episode, explained only by an audit event
+  const daily = dates.map(d => ({ date: d, level: lv.get(d) || 0 }));
+  const events = [
+    { id: "F", date: "2022-06-13", until: "2022-06-17" },
+    { id: "AUD", date: "2022-07-21", audit: true }
+  ];
+  const v = W.verify(daily, events, { minLevel: 2 });
+  assert.equal(v.events, 1, "audit event excluded from the detection denominator");
+  assert.equal(v.episodes, 1);
+  assert.equal(v.unmatchedEpisodes, 0, "episode overlapping the documented range is matched");
+  const v1 = W.verify(daily, events, { minLevel: 1 });
+  assert.equal(v1.episodes, 2);
+  assert.equal(v1.unmatchedEpisodes, 0);
+  assert.equal(v1.matchedByAuditOnly, 1);
+  assert.equal(v1.hits, 1);
+});
